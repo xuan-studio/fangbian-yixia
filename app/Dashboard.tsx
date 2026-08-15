@@ -25,7 +25,9 @@ import {
   Database,
   Gauge,
   HeartPulse,
+  History,
   Layers3,
+  ListChecks,
   LocateFixed,
   MapPin,
   MessageSquare,
@@ -34,6 +36,7 @@ import {
   Radar,
   Route,
   Search,
+  Send,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -41,17 +44,22 @@ import {
   Sun,
   Toilet,
   Upload,
+  Users,
   Wifi,
   WifiOff,
   X,
   Zap,
 } from "lucide-react";
 import type {
+  AuditEvent,
   BuildingLocationCandidate,
   BuildingLocationDataset,
   CommentRecord,
+  CommunityClaim,
+  CommunityRating,
   PremiumDataset,
   PublicDataset,
+  RatingScores,
   ToiletRecord,
 } from "./types";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -76,6 +84,8 @@ type FilterState = {
 };
 
 type ImportedRecord = Record<string, unknown>;
+type CommunityHubTab = "contribute" | "verify" | "history";
+type ContributionKind = "rating" | "fact_update" | "status_report" | "new_toilet";
 
 const SHANGHAI_CENTER: [number, number] = [121.4737, 31.2304];
 const MAP_VISUAL_THEME: VisualTheme = "light";
@@ -160,6 +170,15 @@ const EMPTY_FILTERS: FilterState = {
   accessible: false,
   thirdRestroom: false,
 };
+
+const RATING_DIMENSIONS: Array<[keyof RatingScores, string]> = [
+  ["hygiene", "卫生"],
+  ["odor", "气味"],
+  ["queue", "排队"],
+  ["comfort", "舒适"],
+  ["wayfinding", "指引"],
+  ["facilities", "设施"],
+];
 
 const DEMO_STEPS = [
   ["00:00", "一句话", "上海厕所很多，但真正着急时，数据是不完整的。"],
@@ -299,6 +318,46 @@ function withConsensusStatus(candidate: BuildingLocationCandidate): BuildingLoca
   return { ...candidate, status: "collecting" };
 }
 
+function withClaimStatus(claim: CommunityClaim): CommunityClaim {
+  const confirmations = claim.communityVerifications + claim.demoVerifications;
+  if (claim.rejections >= 2 && claim.rejections >= confirmations) {
+    return { ...claim, status: "disputed" };
+  }
+  if (confirmations >= claim.requiredVerifications) {
+    return {
+      ...claim,
+      status: claim.demoVerifications > 0 ? "published_demo" : "published",
+    };
+  }
+  return { ...claim, status: "collecting" };
+}
+
+function structureContributionText(text: string) {
+  const structured: Record<string, string | number | boolean | null> = {};
+  const floorMatch = text.match(/(?:B\d+|L?\d+\s*(?:F|楼|层))/i);
+  if (floorMatch) structured.floor = floorMatch[0].replace(/\s+/g, "").toUpperCase();
+  if (/东南侧/.test(text)) structured.zone = "东南侧";
+  else if (/东北侧/.test(text)) structured.zone = "东北侧";
+  else if (/西南侧/.test(text)) structured.zone = "西南侧";
+  else if (/西北侧/.test(text)) structured.zone = "西北侧";
+  if (/蹲厕|蹲坑/.test(text)) structured.squat = true;
+  if (/无障碍/.test(text)) structured.accessible = !/没有无障碍|无无障碍/.test(text);
+  if (/第三卫生间/.test(text)) structured.thirdRestroom = !/没有第三卫生间/.test(text);
+  if (/关闭|停用|维修/.test(text)) structured.operationalStatus = "可能暂停开放";
+  if (/24\s*小时|全天开放/.test(text)) structured.open24h = true;
+  return structured;
+}
+
+function averageRating(scores: RatingScores) {
+  return RATING_DIMENSIONS.reduce((sum, [key]) => sum + scores[key], 0) / RATING_DIMENSIONS.length;
+}
+
+function freshnessLabel(updatedAt: string | null) {
+  if (!updatedAt) return "待核实";
+  if (updatedAt === "刚刚" || updatedAt === "2026-08-15") return updatedAt === "刚刚" ? "刚刚" : "今天";
+  return updatedAt;
+}
+
 function makeLayers(
   records: ToiletRecord[],
   boundary: BoundaryData | null,
@@ -333,6 +392,7 @@ function makeLayers(
       radiusUnits: "meters",
       getFillColor: (record) => {
         if (record.sourceType === "premium_xhs") return [245, 168, 36, theme === "light" ? 54 : 34];
+        if (record.sourceType === "user_import") return [154, 127, 240, theme === "light" ? 62 : 40];
         if (record.open24h === true) return theme === "light" ? [255, 99, 71, 58] : [190, 255, 61, 34];
         return theme === "light" ? [0, 146, 162, 38] : [66, 221, 238, 28];
       },
@@ -354,6 +414,7 @@ function makeLayers(
           : 240 + (record.confidence ?? 0.45) * 760 + (record.rating ?? 0) * 90,
       getFillColor: (record) => {
         if (record.sourceType === "premium_xhs") return [245, 168, 36, 238];
+        if (record.sourceType === "user_import") return [154, 127, 240, 232];
         if (record.open24h === true) return theme === "light" ? [255, 99, 71, 238] : [190, 255, 61, 220];
         return theme === "light" ? [0, 146, 162, 220] : [66, 221, 238, 205];
       },
@@ -607,6 +668,196 @@ function DemoModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+type CommunityClaimDraft = {
+  kind: CommunityClaim["kind"];
+  toiletId: string | null;
+  toiletName: string;
+  summary: string;
+  structuredData: CommunityClaim["structuredData"];
+  newToilet?: {
+    district: string | null;
+    address: string | null;
+    longitude: number;
+    latitude: number;
+    floor: string | null;
+    zone: string | null;
+  };
+};
+
+type CommunityHubModalProps = {
+  selected: ToiletRecord | null;
+  initialTab: CommunityHubTab;
+  locationCandidates: BuildingLocationCandidate[];
+  claims: CommunityClaim[];
+  ratings: CommunityRating[];
+  auditLog: AuditEvent[];
+  candidateVotes: Record<string, "confirm" | "reject">;
+  claimVotes: Record<string, "confirm" | "reject">;
+  onClose: () => void;
+  onSubmitRating: (scores: RatingScores, note: string) => void;
+  onSubmitClaim: (draft: CommunityClaimDraft) => void;
+  onVoteLocation: (candidateId: string, vote: "confirm" | "reject") => void;
+  onSimulateLocation: (candidateId: string) => void;
+  onVoteClaim: (claimId: string, vote: "confirm" | "reject") => void;
+  onSimulateClaim: (claimId: string) => void;
+};
+
+function CommunityHubModal({
+  selected,
+  initialTab,
+  locationCandidates,
+  claims,
+  ratings,
+  auditLog,
+  candidateVotes,
+  claimVotes,
+  onClose,
+  onSubmitRating,
+  onSubmitClaim,
+  onVoteLocation,
+  onSimulateLocation,
+  onVoteClaim,
+  onSimulateClaim,
+}: CommunityHubModalProps) {
+  const [activeTab, setActiveTab] = useState<CommunityHubTab>(initialTab);
+  const [kind, setKind] = useState<ContributionKind>("rating");
+  const [scores, setScores] = useState<RatingScores>({ hygiene: 4, odor: 4, queue: 3, comfort: 4, wayfinding: 3, facilities: 4 });
+  const [note, setNote] = useState("");
+  const [claimText, setClaimText] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newDistrict, setNewDistrict] = useState("");
+  const [newAddress, setNewAddress] = useState("");
+  const [newLongitude, setNewLongitude] = useState("121.4737");
+  const [newLatitude, setNewLatitude] = useState("31.2304");
+  const [newFloor, setNewFloor] = useState("");
+  const [newZone, setNewZone] = useState("");
+  const [submittedNotice, setSubmittedNotice] = useState<string | null>(null);
+  const structuredPreview = useMemo(() => structureContributionText(claimText), [claimText]);
+  const selectedRatings = ratings.filter((rating) => rating.toiletId === selected?.id);
+
+  const submitContribution = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (kind === "rating") {
+      if (!selected) return;
+      onSubmitRating(scores, note.trim());
+      setSubmittedNotice("评分已保存到本次会话，并写入版本记录。 ");
+      return;
+    }
+    if (kind === "new_toilet") {
+      const longitude = Number(newLongitude);
+      const latitude = Number(newLatitude);
+      if (!newName.trim() || !Number.isFinite(longitude) || !Number.isFinite(latitude)) return;
+      onSubmitClaim({
+        kind: "new_toilet",
+        toiletId: null,
+        toiletName: newName.trim(),
+        summary: claimText.trim() || `${newName.trim()}新厕所入库申请`,
+        structuredData: {
+          name: newName.trim(),
+          district: newDistrict.trim() || null,
+          address: newAddress.trim() || null,
+          longitude,
+          latitude,
+          floor: newFloor.trim() || null,
+          zone: newZone.trim() || null,
+        },
+        newToilet: {
+          district: newDistrict.trim() || null,
+          address: newAddress.trim() || null,
+          longitude,
+          latitude,
+          floor: newFloor.trim() || null,
+          zone: newZone.trim() || null,
+        },
+      });
+      setSubmittedNotice("新厕所已进入验证中心，达到 3 人共识前不会进入紧急推荐。 ");
+      return;
+    }
+    if (!selected || !claimText.trim()) return;
+    onSubmitClaim({
+      kind,
+      toiletId: selected.id,
+      toiletName: selected.name,
+      summary: claimText.trim(),
+      structuredData: structuredPreview,
+    });
+    setSubmittedNotice("信息已结构化并进入验证中心。 ");
+  };
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="modal-card community-hub-modal" role="dialog" aria-modal="true" aria-labelledby="community-hub-title">
+        <button className="icon-button modal-close" onClick={onClose} aria-label="关闭" title="关闭"><X size={18} /></button>
+        <div className="eyebrow"><Users size={14} /> COMMUNITY DATA LOOP</div>
+        <h2 id="community-hub-title">厕所共建中心</h2>
+        <p className="modal-lead">评论不是终点：AI 把自然语言变成候选数据，多位用户确认后再进入正式地图。</p>
+        <div className="community-hub-tabs" role="tablist">
+          <button className={activeTab === "contribute" ? "is-active" : ""} onClick={() => setActiveTab("contribute")}><Send size={14} /> 我要共建</button>
+          <button className={activeTab === "verify" ? "is-active" : ""} onClick={() => setActiveTab("verify")}><ListChecks size={14} /> 验证中心 <span>{locationCandidates.filter((item) => item.status === "collecting").length + claims.filter((item) => item.status === "collecting").length}</span></button>
+          <button className={activeTab === "history" ? "is-active" : ""} onClick={() => setActiveTab("history")}><History size={14} /> 版本历史</button>
+        </div>
+
+        {activeTab === "contribute" ? <form className="community-contribution-form" onSubmit={submitContribution}>
+          <div className="contribution-kind-tabs">
+            {([
+              ["rating", "厕所打分"],
+              ["fact_update", "补充信息"],
+              ["status_report", "状态报告"],
+              ["new_toilet", "新增厕所"],
+            ] as const).map(([value, label]) => <button type="button" key={value} className={kind === value ? "is-active" : ""} onClick={() => { setKind(value); setSubmittedNotice(null); }}>{label}</button>)}
+          </div>
+
+          {kind !== "new_toilet" ? <div className="selected-contribution-target"><MapPin size={14} /><span>{selected?.name ?? "请先在地图选择一个厕所"}</span></div> : null}
+
+          {kind === "rating" ? <div className="rating-editor">
+            <div className="rating-summary"><strong>{averageRating(scores).toFixed(1)}</strong><span>本次六维评分</span><small>{selectedRatings.length} 条会话评分已存在</small></div>
+            <div className="rating-dimension-list">{RATING_DIMENSIONS.map(([key, label]) => <label key={key}><span>{label}</span><input type="range" min="1" max="5" step="1" value={scores[key]} onChange={(event) => setScores((current) => ({ ...current, [key]: Number(event.target.value) }))} /><strong>{scores[key]}</strong></label>)}</div>
+            <textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="补充一句体验说明，可选填" />
+          </div> : null}
+
+          {kind === "fact_update" || kind === "status_report" ? <div className="claim-editor">
+            <label><span>{kind === "fact_update" ? "用自然语言补充事实" : "报告关闭、维修或状态变化"}</span><textarea required value={claimText} onChange={(event) => setClaimText(event.target.value)} placeholder={kind === "fact_update" ? "例如：5楼东南侧，扶梯下来右转，有蹲厕和无障碍间" : "例如：B1 厕所正在维修，今天暂时关闭"} /></label>
+            <div className="ai-structure-preview"><div><Sparkles size={14} /><strong>AI 结构化预览</strong></div>{Object.keys(structuredPreview).length ? <div className="structured-chip-row">{Object.entries(structuredPreview).map(([key, value]) => <span key={key}>{key}: {String(value)}</span>)}</div> : <p>输入楼层、方向、设施或开放状态后自动提取。</p>}</div>
+          </div> : null}
+
+          {kind === "new_toilet" ? <div className="new-toilet-editor">
+            <div className="community-form-grid"><label><span>厕所/建筑名称</span><input required value={newName} onChange={(event) => setNewName(event.target.value)} placeholder="例如：人民广场地铁站公共厕所" /></label><label><span>行政区</span><input value={newDistrict} onChange={(event) => setNewDistrict(event.target.value)} placeholder="例如：黄浦区" /></label></div>
+            <label><span>地址或入口</span><input value={newAddress} onChange={(event) => setNewAddress(event.target.value)} placeholder="建筑、入口或附近地标" /></label>
+            <div className="community-form-grid"><label><span>经度</span><input required inputMode="decimal" value={newLongitude} onChange={(event) => setNewLongitude(event.target.value)} /></label><label><span>纬度</span><input required inputMode="decimal" value={newLatitude} onChange={(event) => setNewLatitude(event.target.value)} /></label></div>
+            <div className="community-form-grid"><label><span>楼层</span><input value={newFloor} onChange={(event) => setNewFloor(event.target.value)} placeholder="如 B1 / 5F" /></label><label><span>楼内方位</span><input value={newZone} onChange={(event) => setNewZone(event.target.value)} placeholder="如东南侧 / 近电梯" /></label></div>
+            <label><span>发现说明</span><textarea value={claimText} onChange={(event) => setClaimText(event.target.value)} placeholder="说明怎么找到、是否开放以及现场设施" /></label>
+            <p className="coordinate-warning"><CircleAlert size={13} /> 当前预填人民广场演示坐标；真实投稿必须使用现场位置。</p>
+          </div> : null}
+
+          {submittedNotice ? <div className="community-submit-notice"><CircleCheck size={14} /> {submittedNotice}</div> : null}
+          <button className="primary-button community-submit-button" type="submit" disabled={kind !== "new_toilet" && !selected}><Send size={15} /> {kind === "rating" ? "提交评分" : "提交到验证中心"}</button>
+        </form> : null}
+
+        {activeTab === "verify" ? <div className="verification-center">
+          <div className="verification-summary"><div><strong>{locationCandidates.length + claims.length}</strong><span>全部任务</span></div><div><strong>{locationCandidates.filter((item) => item.status === "collecting").length + claims.filter((item) => item.status === "collecting").length}</strong><span>等待共识</span></div><div><strong>3</strong><span>上线门槛</span></div></div>
+          {!locationCandidates.length && !claims.length ? <p className="empty-copy">暂无验证任务。先提交一条厕所信息。</p> : null}
+          <div className="verification-task-list">
+            {locationCandidates.map((candidate) => {
+              const total = candidate.communityVerifications + candidate.demoVerifications;
+              const done = candidate.status === "published" || candidate.status === "published_demo";
+              return <article key={candidate.id} className={`verification-task status-${candidate.status}`}><div className="verification-task-head"><span>楼内位置</span><small>{candidate.status === "published_demo" ? "演示上线" : done ? "已上线" : candidate.status === "disputed" ? "有争议" : "待验证"}</small></div><h3>{candidate.buildingName} · {candidate.floor} · {candidate.zone}</h3><p>{candidate.directions ?? "路线说明待补充"}</p><div className="task-progress"><i style={{ width: `${Math.min(100, total / candidate.requiredVerifications * 100)}%` }} /></div><div className="task-count"><span>{total}/{candidate.requiredVerifications} 确认</span><span>真实 {candidate.communityVerifications} · 演示 {candidate.demoVerifications} · 反对 {candidate.rejections}</span></div><div className="task-actions"><button disabled={Boolean(candidateVotes[candidate.id]) || done} onClick={() => onVoteLocation(candidate.id, "confirm")}><Check size={13} />确认</button><button disabled={Boolean(candidateVotes[candidate.id]) || done} onClick={() => onVoteLocation(candidate.id, "reject")}><X size={13} />反对</button>{!done ? <button className="is-demo" onClick={() => onSimulateLocation(candidate.id)}>模拟下一位</button> : null}</div></article>;
+            })}
+            {claims.map((claim) => {
+              const total = claim.communityVerifications + claim.demoVerifications;
+              const done = claim.status === "published" || claim.status === "published_demo";
+              return <article key={claim.id} className={`verification-task status-${claim.status}`}><div className="verification-task-head"><span>{claim.kind === "new_toilet" ? "新厕所入库" : claim.kind === "status_report" ? "状态报告" : "信息补充"}</span><small>{claim.status === "published_demo" ? "演示上线" : done ? "已上线" : claim.status === "disputed" ? "有争议" : "待验证"}</small></div><h3>{claim.toiletName}</h3><p>{claim.summary}</p>{Object.keys(claim.structuredData).length ? <div className="structured-chip-row">{Object.entries(claim.structuredData).slice(0, 6).map(([key, value]) => <span key={key}>{key}: {String(value)}</span>)}</div> : null}<div className="task-progress"><i style={{ width: `${Math.min(100, total / claim.requiredVerifications * 100)}%` }} /></div><div className="task-count"><span>{total}/{claim.requiredVerifications} 确认</span><span>真实 {claim.communityVerifications} · 演示 {claim.demoVerifications} · 反对 {claim.rejections}</span></div><div className="task-actions"><button disabled={Boolean(claimVotes[claim.id]) || done} onClick={() => onVoteClaim(claim.id, "confirm")}><Check size={13} />确认</button><button disabled={Boolean(claimVotes[claim.id]) || done} onClick={() => onVoteClaim(claim.id, "reject")}><X size={13} />反对</button>{!done ? <button className="is-demo" onClick={() => onSimulateClaim(claim.id)}>模拟下一位</button> : null}</div></article>;
+            })}
+          </div>
+        </div> : null}
+
+        {activeTab === "history" ? <div className="audit-timeline">
+          {auditLog.map((event) => <article key={event.id} className={`audit-event source-${event.source}`}><span className="audit-dot" /><div><div className="audit-event-head"><strong>{event.title}</strong><small>{event.createdAt}</small></div><p>{event.detail}</p><span>{event.actor} · {event.source === "demo" ? "演示事件" : event.source === "session" ? "本次会话" : "系统记录"}</span></div></article>)}
+        </div> : null}
+      </section>
+    </div>
+  );
+}
+
 export function Dashboard() {
   const [publicRecords, setPublicRecords] = useState<ToiletRecord[]>([]);
   const [premiumRecords, setPremiumRecords] = useState<ToiletRecord[]>([]);
@@ -623,6 +874,8 @@ export function Dashboard() {
   const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [healthOpen, setHealthOpen] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
+  const [communityHubOpen, setCommunityHubOpen] = useState(false);
+  const [communityHubTab, setCommunityHubTab] = useState<CommunityHubTab>("contribute");
   const [healthHistory, setHealthHistory] = useState(0);
   const [userLocation, setUserLocation] = useState<[number, number]>(SHANGHAI_CENTER);
   const [locationLabel, setLocationLabel] = useState("人民广场演示点");
@@ -630,6 +883,13 @@ export function Dashboard() {
   const [commentDraft, setCommentDraft] = useState("");
   const [locationCandidates, setLocationCandidates] = useState<BuildingLocationCandidate[]>([]);
   const [candidateVotes, setCandidateVotes] = useState<Record<string, "confirm" | "reject">>({});
+  const [communityRatings, setCommunityRatings] = useState<CommunityRating[]>([]);
+  const [communityClaims, setCommunityClaims] = useState<CommunityClaim[]>([]);
+  const [claimVotes, setClaimVotes] = useState<Record<string, "confirm" | "reject">>({});
+  const [auditLog, setAuditLog] = useState<AuditEvent[]>([
+    { id: "audit-seed-indoor", toiletId: "premium-xhs-07-venue-huijin-xujiahui", type: "contribution", title: "楼内位置进入候选池", detail: "汇金百货 5F 东南侧由榜单聚合线索提取，等待社区现场确认。", actor: "结构化引擎", source: "system", createdAt: "今天 16:30" },
+    { id: "audit-seed-import", toiletId: null, type: "import", title: "12 个榜单场所完成匹配", detail: "榜单场所与公开厕所保持独立，具体楼层继续待核实。", actor: "数据管道", source: "system", createdAt: "今天 15:55" },
+  ]);
   const [locationFormOpen, setLocationFormOpen] = useState(false);
   const [locationFloor, setLocationFloor] = useState("");
   const [locationZone, setLocationZone] = useState("");
@@ -707,7 +967,7 @@ export function Dashboard() {
       if (filters.opening === "24h" && record.open24h !== true) return false;
       if (filters.opening === "known" && !record.openingHours) return false;
       if (filters.source === "public" && record.sourceType !== "public_open_data") return false;
-      if (filters.source === "premium" && record.sourceType !== "premium_xhs") return false;
+      if (filters.source === "premium" && record.sourceType === "public_open_data") return false;
       if (filters.squat && record.facility.squat !== true) return false;
       if (filters.seated && record.facility.seated !== true) return false;
       if (filters.accessible && record.facility.accessible !== true) return false;
@@ -734,9 +994,10 @@ export function Dashboard() {
       [...records]
         .map((record) => ({ record, distance: haversineKm(userLocation, [record.coordinates.longitude, record.coordinates.latitude]) }))
         .sort((a, b) => a.distance - b.distance)[0] ?? null;
+    const emergencyEligible = (record: ToiletRecord) => !record.tags.includes("演示上线") && !record.tags.includes("新厕所候选");
     return [
-      { level: 1, title: "严选命中", note: "保留全部当前筛选", result: nearest(filteredRecords), tone: "safe" },
-      { level: 2, title: "放宽设施", note: "只保留 24 小时优先", result: nearest(allRecords.filter((record) => record.open24h === true)), tone: "lime" },
+      { level: 1, title: "严选命中", note: "保留全部当前筛选", result: nearest(filteredRecords.filter(emergencyEligible)), tone: "safe" },
+      { level: 2, title: "放宽设施", note: "只保留 24 小时优先", result: nearest(allRecords.filter((record) => record.open24h === true && emergencyEligible(record))), tone: "lime" },
       { level: 3, title: "最近公开点", note: "忽略未知设施，按距离", result: nearest(publicRecords), tone: "amber" },
       { level: 4, title: "人工求助", note: "询问地铁、酒店、医院或商场服务台；说明紧急情况", result: null, tone: "red" },
     ] as const;
@@ -828,6 +1089,28 @@ export function Dashboard() {
   const publishedIndoorLocation = selectedLocationCandidates.find(
     (candidate) => candidate.status === "published" || candidate.status === "published_demo",
   ) ?? null;
+  const selectedCommunityRatings = selected
+    ? communityRatings.filter((rating) => rating.toiletId === selected.id && rating.source !== "mock")
+    : [];
+  const selectedCommunityScore = selectedCommunityRatings.length
+    ? selectedCommunityRatings.reduce((sum, rating) => sum + rating.average, 0) / selectedCommunityRatings.length
+    : null;
+  const selectedDimensionScores = RATING_DIMENSIONS.map(([key, label]) => ({
+    key,
+    label,
+    value: selectedCommunityRatings.length
+      ? selectedCommunityRatings.reduce((sum, rating) => sum + rating.scores[key], 0) / selectedCommunityRatings.length
+      : null,
+  }));
+
+  const recordAudit = (event: AuditEvent) => {
+    setAuditLog((current) => [event, ...current]);
+  };
+
+  const openCommunityHub = (tab: CommunityHubTab) => {
+    setCommunityHubTab(tab);
+    setCommunityHubOpen(true);
+  };
 
   const submitIndoorLocation = (event: React.FormEvent) => {
     event.preventDefault();
@@ -872,31 +1155,99 @@ export function Dashboard() {
     setLocationZone("");
     setLocationDirections("");
     setLocationFormOpen(false);
+    recordAudit({ id: `audit-${candidateId}`, toiletId: selected.id, type: "contribution", title: "提交楼内位置候选", detail: `${floor} · ${zone}${directions ? ` · ${directions}` : ""}`, actor: "本次演示", source: "session", createdAt: "刚刚" });
   };
 
   const voteOnLocation = (candidateId: string, vote: "confirm" | "reject") => {
     if (candidateVotes[candidateId]) return;
+    const candidate = locationCandidates.find((item) => item.id === candidateId);
+    if (!candidate) return;
+    const next = withConsensusStatus({
+      ...candidate,
+      communityVerifications: candidate.communityVerifications + (vote === "confirm" ? 1 : 0),
+      rejections: candidate.rejections + (vote === "reject" ? 1 : 0),
+    });
     setCandidateVotes((current) => ({ ...current, [candidateId]: vote }));
-    setLocationCandidates((current) => current.map((candidate) => {
-      if (candidate.id !== candidateId) return candidate;
-      return withConsensusStatus({
-        ...candidate,
-        communityVerifications: candidate.communityVerifications + (vote === "confirm" ? 1 : 0),
-        rejections: candidate.rejections + (vote === "reject" ? 1 : 0),
-      });
-    }));
+    setLocationCandidates((current) => current.map((item) => item.id === candidateId ? next : item));
+    recordAudit({ id: `audit-location-vote-${candidateId}-${auditLog.length}`, toiletId: candidate.toiletId, type: next.status === "published" || next.status === "published_demo" ? "publish" : "verification", title: vote === "confirm" ? "确认楼内位置" : "反对楼内位置", detail: `${candidate.buildingName} · ${candidate.floor} · ${candidate.zone}${next.status === "published_demo" ? "已达到演示上线门槛" : ""}`, actor: "现场用户", source: next.status === "published_demo" ? "demo" : "session", createdAt: "刚刚" });
   };
 
   const simulateNextVerifier = (candidateId: string) => {
-    setLocationCandidates((current) => current.map((candidate) => {
-      if (candidate.id !== candidateId) return candidate;
-      const total = candidate.communityVerifications + candidate.demoVerifications;
-      if (total >= candidate.requiredVerifications) return candidate;
-      return withConsensusStatus({
-        ...candidate,
-        demoVerifications: candidate.demoVerifications + 1,
-      });
-    }));
+    const candidate = locationCandidates.find((item) => item.id === candidateId);
+    if (!candidate) return;
+    const total = candidate.communityVerifications + candidate.demoVerifications;
+    if (total >= candidate.requiredVerifications) return;
+    const next = withConsensusStatus({ ...candidate, demoVerifications: candidate.demoVerifications + 1 });
+    setLocationCandidates((current) => current.map((item) => item.id === candidateId ? next : item));
+    recordAudit({ id: `audit-location-demo-${candidateId}-${auditLog.length}`, toiletId: candidate.toiletId, type: next.status === "published_demo" ? "publish" : "verification", title: next.status === "published_demo" ? "楼内位置演示上线" : "增加一位演示验证者", detail: `${candidate.buildingName} · ${candidate.floor} · ${candidate.zone}`, actor: "演示验证者", source: "demo", createdAt: "刚刚" });
+  };
+
+  const submitCommunityRating = (scores: RatingScores, note: string) => {
+    if (!selected) return;
+    const rating: CommunityRating = { id: `rating-${selected.id}-${communityRatings.length + 1}`, toiletId: selected.id, scores, average: averageRating(scores), note: note || null, source: "session", author: "本次演示", createdAt: "刚刚" };
+    setCommunityRatings((current) => [...current, rating]);
+    if (note) {
+      setSessionComments((current) => ({ ...current, [selected.id]: [...(current[selected.id] ?? []), { id: `rating-comment-${rating.id}`, author: "本次演示", content: note, createdAt: "刚刚", source: "session", sourceLabel: `六维评分 ${rating.average.toFixed(1)}`, sourceUrl: null }] }));
+    }
+    recordAudit({ id: `audit-${rating.id}`, toiletId: selected.id, type: "contribution", title: `提交六维评分 ${rating.average.toFixed(1)}`, detail: RATING_DIMENSIONS.map(([key, label]) => `${label}${scores[key]}`).join(" · "), actor: "本次演示", source: "session", createdAt: "刚刚" });
+  };
+
+  const submitCommunityClaim = (draft: CommunityClaimDraft) => {
+    const claimId = `claim-${communityClaims.length + 1}`;
+    const proposedToilet = draft.kind === "new_toilet" && draft.newToilet ? {
+      id: `community-toilet-${communityClaims.length + 1}`,
+      sourceType: "user_import" as const,
+      sourceName: "社区共建投稿",
+      sourceUrl: null,
+      sourceRef: claimId,
+      dataStatus: "community_report" as const,
+      name: draft.toiletName,
+      district: draft.newToilet.district,
+      address: draft.newToilet.address,
+      coordinates: { longitude: draft.newToilet.longitude, latitude: draft.newToilet.latitude },
+      openingHours: null,
+      open24h: null,
+      facility: { squat: null, seated: null, accessible: null, thirdRestroom: null, babyCare: null },
+      crowd: null,
+      tags: ["社区共建", "新厕所候选", ...(draft.newToilet.floor ? [draft.newToilet.floor] : []), ...(draft.newToilet.zone ? [draft.newToilet.zone] : [])],
+      rating: null,
+      reviewCount: null,
+      healthScore: null,
+      confidence: null,
+      description: draft.summary,
+      comments: [{ id: `claim-comment-${claimId}`, author: "本次演示", content: draft.summary, createdAt: "刚刚", source: "session" as const, sourceLabel: "新厕所投稿", sourceUrl: null }],
+      updatedAt: "刚刚",
+    } satisfies ToiletRecord : null;
+    const claim: CommunityClaim = { id: claimId, toiletId: draft.toiletId, toiletName: draft.toiletName, kind: draft.kind, summary: draft.summary, structuredData: draft.structuredData, proposedToilet, status: "collecting", communityVerifications: 0, demoVerifications: 0, rejections: 0, requiredVerifications: 3, createdAt: "刚刚" };
+    setCommunityClaims((current) => [...current, claim]);
+    recordAudit({ id: `audit-${claimId}`, toiletId: draft.toiletId, type: "contribution", title: draft.kind === "new_toilet" ? "提交新厕所入库" : draft.kind === "status_report" ? "提交状态报告" : "提交信息补充", detail: draft.summary, actor: "本次演示", source: "session", createdAt: "刚刚" });
+  };
+
+  const publishClaimToMap = (claim: CommunityClaim) => {
+    if (!claim.proposedToilet) return;
+    setPremiumRecords((current) => current.some((record) => record.id === claim.proposedToilet?.id) ? current : [...current, { ...claim.proposedToilet, sourceName: claim.status === "published_demo" ? "社区共建 · 演示上线" : "社区共建 · 已验证", tags: [...claim.proposedToilet.tags.filter((tag) => tag !== "新厕所候选"), claim.status === "published_demo" ? "演示上线" : "社区已验证"] }]);
+  };
+
+  const voteOnClaim = (claimId: string, vote: "confirm" | "reject") => {
+    if (claimVotes[claimId]) return;
+    const claim = communityClaims.find((item) => item.id === claimId);
+    if (!claim) return;
+    const next = withClaimStatus({ ...claim, communityVerifications: claim.communityVerifications + (vote === "confirm" ? 1 : 0), rejections: claim.rejections + (vote === "reject" ? 1 : 0) });
+    setClaimVotes((current) => ({ ...current, [claimId]: vote }));
+    setCommunityClaims((current) => current.map((item) => item.id === claimId ? next : item));
+    if (next.status === "published" || next.status === "published_demo") publishClaimToMap(next);
+    recordAudit({ id: `audit-claim-vote-${claimId}-${auditLog.length}`, toiletId: claim.toiletId, type: next.status.startsWith("published") ? "publish" : "verification", title: vote === "confirm" ? "确认共建候选" : "反对共建候选", detail: claim.summary, actor: "现场用户", source: next.status === "published_demo" ? "demo" : "session", createdAt: "刚刚" });
+  };
+
+  const simulateNextClaimVerifier = (claimId: string) => {
+    const claim = communityClaims.find((item) => item.id === claimId);
+    if (!claim) return;
+    const total = claim.communityVerifications + claim.demoVerifications;
+    if (total >= claim.requiredVerifications) return;
+    const next = withClaimStatus({ ...claim, demoVerifications: claim.demoVerifications + 1 });
+    setCommunityClaims((current) => current.map((item) => item.id === claimId ? next : item));
+    if (next.status === "published_demo") publishClaimToMap(next);
+    recordAudit({ id: `audit-claim-demo-${claimId}-${auditLog.length}`, toiletId: claim.toiletId, type: next.status === "published_demo" ? "publish" : "verification", title: next.status === "published_demo" ? "候选完成演示上线" : "增加一位演示验证者", detail: claim.summary, actor: "演示验证者", source: "demo", createdAt: "刚刚" });
   };
 
   return (
@@ -915,6 +1266,8 @@ export function Dashboard() {
             {mapMode === "online" ? <Wifi size={15} /> : <WifiOff size={15} />}
             {mapMode === "online" ? "在线底图" : "离线概念图"}
           </button>
+          <button className="header-button community-button" onClick={() => openCommunityHub("contribute")}><Users size={16} /> 我要共建</button>
+          <button className="header-button" onClick={() => openCommunityHub("verify")}><ListChecks size={16} /> 验证中心 <span className="header-count">{locationCandidates.filter((item) => item.status === "collecting").length + communityClaims.filter((item) => item.status === "collecting").length}</span></button>
           <button className="header-button" onClick={() => fileRef.current?.click()}><Upload size={16} /> 导入榜单 JSON</button>
           <button className="header-button is-accent" onClick={() => setDemoOpen(true)}><Sparkles size={16} /> 3 分钟演示</button>
           <input ref={fileRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleImport(file); event.currentTarget.value = ""; }} />
@@ -946,14 +1299,15 @@ export function Dashboard() {
             <div className="data-stat-row"><span><i className="legend-column public" />公开厕所</span><strong>{publicRecords.length}</strong></div>
             <div className="data-stat-row"><span><i className="legend-column premium" />优质榜单</span><strong>{premiumRecords.length}</strong></div>
             <div className="data-stat-row"><span><i className="legend-column open" />确认 24h</span><strong>{publicRecords.filter((record) => record.open24h === true).length}</strong></div>
+            <div className="data-stat-row"><span><i className="legend-column community" />待验证任务</span><strong>{locationCandidates.filter((item) => item.status === "collecting").length + communityClaims.filter((item) => item.status === "collecting").length}</strong></div>
             <p className="source-note">{publicMeta?.license ?? "正在读取来源许可"}</p>
           </section>
 
           <section className="premium-panel">
-            <div className="section-heading"><span><Star size={15} /> 小红书优质榜</span><span className={`mini-badge ${premiumStatus === "ready" ? "is-ready" : ""}`}>{premiumStatus === "ready" ? "READY" : "PENDING"}</span></div>
+            <div className="section-heading"><span><Star size={15} /> 榜单与社区上线</span><span className={`mini-badge ${premiumStatus === "ready" ? "is-ready" : ""}`}>{premiumStatus === "ready" ? "READY" : "PENDING"}</span></div>
             {premiumRecords.length ? (
               <>
-                <div className="premium-match-note"><CircleCheck size={16} /><span><strong>{premiumRecords.length} 个榜单场所已匹配</strong><small>金色柱为商场场所点，具体厕所楼层待核实</small></span></div>
+                <div className="premium-match-note"><CircleCheck size={16} /><span><strong>{premiumRecords.length} 个榜单/社区点已上线</strong><small>金色为榜单，紫色为社区演示上线</small></span></div>
                 <div className="premium-list">{premiumRecords.map((record, index) => <button key={record.id} onClick={() => setSelectedId(record.id)}><span>{index + 1}</span><div><strong>{record.name}</strong><small>{record.district ?? "区域待核实"} · {record.tags[1] ?? "榜单线索"}</small></div><ChevronRight size={15} /></button>)}</div>
               </>
             ) : (
@@ -991,7 +1345,7 @@ export function Dashboard() {
                 <div className="route-disclaimer"><CircleAlert size={14} /> 距离为直线估算，不提供精确导航；开放时间未知时，请优先电话或现场确认。</div>
               </div>
             )}
-            <div className="map-legend"><span><i className="dot-lime" />24 小时</span><span><i className="dot-cyan" />公开数据</span><span><i className="dot-gold" />优质榜单</span></div>
+            <div className="map-legend"><span><i className="dot-lime" />24 小时</span><span><i className="dot-cyan" />公开数据</span><span><i className="dot-gold" />优质榜单</span><span><i className="dot-community" />社区上线</span></div>
             <div className="map-attribution">© OpenStreetMap contributors · 离线轮廓为概念可视化</div>
           </div>
         </section>
@@ -1008,10 +1362,15 @@ export function Dashboard() {
               </div>
 
               <div className="detail-score-strip">
-                <div><span>{selected.rating !== null ? "用户评分" : "来源可信度"}</span><strong>{scoreLabel(selected)}</strong></div>
-                <div><span>用户声音</span><strong>{(selected.reviewCount ?? comments.length) || "—"}</strong></div>
-                <div><span>健康度</span><strong>{selected.healthScore ?? "—"}</strong></div>
+                <div><span>体验评分</span><strong>{selectedCommunityScore === null ? "—" : selectedCommunityScore.toFixed(1)}</strong></div>
+                <div><span>数据可信度</span><strong>{scoreLabel(selected)}</strong></div>
+                <div><span>信息新鲜度</span><strong>{freshnessLabel(selected.updatedAt)}</strong></div>
               </div>
+
+              <section className="detail-section community-rating-section">
+                <div className="section-heading"><span><Star size={15} /> 社区六维评分</span><small>{selectedCommunityRatings.length} 条真实会话评分</small></div>
+                {selectedCommunityScore !== null ? <div className="rating-result"><div className="rating-result-score"><strong>{selectedCommunityScore.toFixed(1)}</strong><span>/ 5.0</span></div><div className="rating-result-bars">{selectedDimensionScores.map((dimension) => <div key={dimension.key}><span>{dimension.label}</span><i><b style={{ width: `${(dimension.value ?? 0) * 20}%` }} /></i><strong>{dimension.value?.toFixed(1)}</strong></div>)}</div></div> : <div className="rating-empty"><p>体验评分与数据可信度分开计算。提交者不能用一条评论直接改变正式总分。</p><button type="button" onClick={() => openCommunityHub("contribute")}><Star size={13} /> 给这个厕所打分</button></div>}
+              </section>
 
               <section className="detail-section">
                 <div className="section-heading"><span><Gauge size={15} /> 设施情报</span><small>未知 ≠ 没有</small></div>
@@ -1032,6 +1391,7 @@ export function Dashboard() {
               <section className="detail-section source-section">
                 <div className="section-heading"><span><Database size={15} /> 来源卡</span><small>{selected.dataStatus === "verified" ? "已核验" : "待交叉核验"}</small></div>
                 <div className="source-card"><div><strong>{selected.sourceName}</strong><p>{selected.sourceRef ?? "来源编号待核实"}</p></div>{selected.sourceUrl ? <a href={selected.sourceUrl} target="_blank" rel="noreferrer" aria-label="打开数据来源" title="打开数据来源"><ChevronRight size={16} /></a> : <span className="disabled-link"><ChevronRight size={16} /></span>}</div>
+                <button type="button" className="version-history-button" onClick={() => openCommunityHub("history")}><History size={13} /> 查看数据版本历史</button>
               </section>
 
               <section className="detail-section indoor-consensus-section">
@@ -1091,6 +1451,7 @@ export function Dashboard() {
 
       {healthOpen && <HealthModal onClose={() => setHealthOpen(false)} onSave={() => setHealthHistory((count) => count + 1)} />}
       {demoOpen && <DemoModal onClose={() => setDemoOpen(false)} />}
+      {communityHubOpen && <CommunityHubModal selected={selected} initialTab={communityHubTab} locationCandidates={locationCandidates} claims={communityClaims} ratings={communityRatings} auditLog={auditLog} candidateVotes={candidateVotes} claimVotes={claimVotes} onClose={() => setCommunityHubOpen(false)} onSubmitRating={submitCommunityRating} onSubmitClaim={submitCommunityClaim} onVoteLocation={voteOnLocation} onSimulateLocation={simulateNextVerifier} onVoteClaim={voteOnClaim} onSimulateClaim={simulateNextClaimVerifier} />}
     </div>
   );
 }

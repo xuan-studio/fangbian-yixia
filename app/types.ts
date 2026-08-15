@@ -95,3 +95,50 @@ export type BuildingLocationDataset = {
   policy: string;
   records: BuildingLocationCandidate[];
 };
+
+export type RatingScores = {
+  hygiene: number;
+  odor: number;
+  queue: number;
+  comfort: number;
+  wayfinding: number;
+  facilities: number;
+};
+
+export type CommunityRating = {
+  id: string;
+  toiletId: string;
+  scores: RatingScores;
+  average: number;
+  note: string | null;
+  source: "session" | "mock";
+  author: string;
+  createdAt: string;
+};
+
+export type CommunityClaim = {
+  id: string;
+  toiletId: string | null;
+  toiletName: string;
+  kind: "fact_update" | "status_report" | "new_toilet";
+  summary: string;
+  structuredData: Record<string, string | number | boolean | null>;
+  proposedToilet: ToiletRecord | null;
+  status: "collecting" | "published" | "published_demo" | "disputed";
+  communityVerifications: number;
+  demoVerifications: number;
+  rejections: number;
+  requiredVerifications: number;
+  createdAt: string;
+};
+
+export type AuditEvent = {
+  id: string;
+  toiletId: string | null;
+  type: "import" | "contribution" | "verification" | "publish" | "dispute";
+  title: string;
+  detail: string;
+  actor: string;
+  source: "system" | "session" | "demo";
+  createdAt: string;
+};

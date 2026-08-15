@@ -56,13 +56,14 @@ test("public and premium datasets preserve truthful status", async () => {
 });
 
 test("offline and import contracts are packaged", async () => {
-  const [serviceWorker, schema, template, dashboard, styles, candidates] = await Promise.all([
+  const [serviceWorker, schema, template, dashboard, styles, candidates, types] = await Promise.all([
     readFile(new URL("public/sw.js", root), "utf8"),
     readFile(new URL("public/data/toilet-record.schema.json", root), "utf8"),
     readFile(new URL("public/data/premium-import-template.json", root), "utf8"),
     readFile(new URL("app/Dashboard.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
     readFile(new URL("public/data/xhs-candidates.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("app/types.ts", root), "utf8"),
   ]);
   assert.match(serviceWorker, /public-toilets\.json/);
   assert.match(serviceWorker, /premium-comment-seeds\.json/);
@@ -74,6 +75,13 @@ test("offline and import contracts are packaged", async () => {
   assert.match(dashboard, /未知 ≠ 没有/);
   assert.match(dashboard, /3 人确认后上线/);
   assert.match(dashboard, /模拟下一位用户确认/);
+  assert.match(dashboard, /厕所共建中心/);
+  assert.match(dashboard, /社区六维评分/);
+  assert.match(dashboard, /新厕所已进入验证中心/);
+  assert.match(dashboard, /!record\.tags\.includes\("演示上线"\)/);
+  assert.match(types, /export type CommunityClaim/);
+  assert.match(types, /export type CommunityRating/);
+  assert.match(types, /export type AuditEvent/);
   assert.match(dashboard, /interleaved: false/);
   assert.match(dashboard, /"light_all" : "dark_all"/);
   assert.match(dashboard, /MAP_VISUAL_THEME: VisualTheme = "light"/);
