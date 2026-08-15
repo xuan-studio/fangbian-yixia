@@ -1,0 +1,204 @@
+{
+  "status": "pending_verification",
+  "collectedAt": "2026-08-15",
+  "sourcePlatform": "小红书",
+  "collectionMethod": "用户已登录的 Chrome 中可见搜索结果与点点 AI 的 53 篇笔记聚合摘要",
+  "searchQuery": "上海 厕所 榜单 商场 厕所",
+  "importPolicy": "本文件仅是候选证据层。坐标、设施和营业信息核实前不得导入 premium-toilets.json。",
+  "sourcePosts": [
+    {
+      "noteId": "67c964910000000029036af5",
+      "title": "上海值得一拉的公共卫生间盘点🚾",
+      "author": "柚子同学在上海",
+      "publishedLabel": "2025-03-06",
+      "visibleEngagement": 81,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/67c964910000000029036af5"
+    },
+    {
+      "noteId": "6908303e000000000703b817",
+      "title": "上海优秀商场厕所大盘点",
+      "author": "奥迪特伐是奥特曼",
+      "publishedLabel": "2025-11-12",
+      "visibleEngagement": 69,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/6908303e000000000703b817"
+    },
+    {
+      "noteId": "67fe5581000000001b03d83d",
+      "title": "上海拉💩豪华入厕体验🥰",
+      "author": "望星",
+      "publishedLabel": "2025-04-15",
+      "visibleEngagement": 59,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/67fe5581000000001b03d83d"
+    },
+    {
+      "noteId": "692fda4c000000001902562a",
+      "title": "上海商场【拉屎】排行榜·红榜",
+      "author": "KDS宽带山",
+      "publishedLabel": "2025-12-03",
+      "visibleEngagement": 2215,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/692fda4c000000001902562a"
+    },
+    {
+      "noteId": "687362440000000011003d76",
+      "title": "上海商场厕所红榜！建议收藏！",
+      "author": "耶嘻五安",
+      "publishedLabel": "2025-07-13",
+      "visibleEngagement": 9,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/687362440000000011003d76"
+    },
+    {
+      "noteId": "695526e2000000001e005e5d",
+      "title": "上海环球港｜唯一蹲坑厕所📍",
+      "author": "村姑大人",
+      "publishedLabel": "2025-12-31",
+      "visibleEngagement": 171,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/695526e2000000001e005e5d"
+    },
+    {
+      "noteId": "68f1ca67000000000401205d",
+      "title": "南京西路入门级厕所，1788，久光，芮欧",
+      "author": "探厕器POV",
+      "publishedLabel": "2025-10-17",
+      "visibleEngagement": 31,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/68f1ca67000000000401205d"
+    },
+    {
+      "noteId": "697f06fe000000000a02f1a2",
+      "title": "上海荟聚蹲坑攻略",
+      "author": "村姑大人",
+      "publishedLabel": "02-01",
+      "visibleEngagement": 162,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/697f06fe000000000a02f1a2"
+    },
+    {
+      "noteId": "67fddef7000000001d019d62",
+      "title": "快乐拉屎｜上海好拉厕所排行榜",
+      "author": "一颗雨滴💧",
+      "publishedLabel": "2025-04-15",
+      "visibleEngagement": 19,
+      "sourceUrl": "https://www.xiaohongshu.com/explore/67fddef7000000001d019d62"
+    }
+  ],
+  "venueCandidates": [
+    {
+      "name": "港汇恒隆广场",
+      "district": "徐汇区",
+      "list": "gold",
+      "recommendationSharePercent": 28,
+      "evidenceSummary": "聚合摘要将其列入黄金红榜，提到穹顶、古铜色电梯和精致细节。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "兴业太古汇",
+      "district": "静安区",
+      "list": "gold",
+      "recommendationSharePercent": 26,
+      "evidenceSummary": "聚合摘要将其列入黄金红榜，强调艺术感、拍照效果和私密感。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "静安嘉里中心",
+      "district": "静安区",
+      "list": "gold",
+      "recommendationSharePercent": 23,
+      "evidenceSummary": "聚合摘要将其列入黄金红榜，但尚未读取到具体厕所设施描述。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "五角场合生汇",
+      "district": "杨浦区",
+      "list": "gold",
+      "recommendationSharePercent": 15,
+      "evidenceSummary": "聚合摘要将其列入黄金红榜，但尚未读取到具体厕所设施描述。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "久光百货",
+      "district": "静安区",
+      "list": "gold",
+      "recommendationSharePercent": 13,
+      "evidenceSummary": "聚合摘要将其列入黄金红榜；搜索结果另有南京西路 1788、久光、芮欧的专题笔记。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "比斯特上海购物村",
+      "district": "浦东新区",
+      "list": "design",
+      "recommendationSharePercent": null,
+      "evidenceSummary": "聚合摘要提到索尼娅·德劳内主题厕所和彩色马赛克几何空间。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "汇金百货",
+      "district": "徐汇区",
+      "list": "design",
+      "recommendationSharePercent": null,
+      "evidenceSummary": "聚合摘要提到 5 楼东南侧的太空舱主题卫生间。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "中信泰富广场",
+      "district": "静安区",
+      "list": "design",
+      "recommendationSharePercent": null,
+      "evidenceSummary": "聚合摘要提到渐变粉色装修和适合拍照的光线。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "长宁龙之梦购物中心",
+      "district": "长宁区",
+      "list": "warning",
+      "recommendationSharePercent": null,
+      "evidenceSummary": "聚合摘要称部分讨论提到异味、排队和设施老旧；需原帖与现场交叉核验。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "五角场万达广场",
+      "district": "杨浦区",
+      "list": "warning",
+      "recommendationSharePercent": null,
+      "evidenceSummary": "聚合摘要称高峰人流下保洁较难跟上；需原帖与现场交叉核验。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "美罗城",
+      "district": "徐汇区",
+      "list": "warning",
+      "recommendationSharePercent": null,
+      "evidenceSummary": "聚合摘要称设施与光线体验较旧；需原帖与现场交叉核验。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    },
+    {
+      "name": "日月光中心广场",
+      "district": "黄浦区",
+      "list": "warning",
+      "recommendationSharePercent": null,
+      "evidenceSummary": "聚合摘要称坑位和高峰排队是主要问题；需原帖与现场交叉核验。",
+      "coordinates": null,
+      "facility": null,
+      "verification": "pending"
+    }
+  ]
+}

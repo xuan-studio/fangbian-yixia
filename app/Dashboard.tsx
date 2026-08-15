@@ -282,7 +282,6 @@ function makeLayers(
         shininess: 70,
         specularColor: [140, 255, 245],
       },
-      transitions: { getElevation: 350 },
     }),
     selected
       ? new ScatterplotLayer<ToiletRecord>({
@@ -336,7 +335,9 @@ function ToiletMap({
       attributionControl: false,
     });
     const overlay = new MapboxOverlay({
-      interleaved: true,
+      // Separate-canvas mode is compatible with MapLibre 6 and remains fully
+      // functional when the online basemap drops to the local empty style.
+      interleaved: false,
       layers: [],
       onClick: (info: PickingInfo<ToiletRecord>) => {
         if (info.object) onSelect(info.object);
@@ -392,7 +393,7 @@ function ToiletMap({
         if (info.object) onSelect(info.object);
       },
     });
-  }, [records, boundary, selectedId, onSelect]);
+  }, [records, boundary, selectedId, mode, onSelect]);
 
   return <div className="map-canvas" ref={containerRef} aria-label="上海公共厕所 3D 地图" />;
 }
@@ -619,9 +620,13 @@ export function Dashboard() {
     });
   }, [allRecords, filters]);
 
+  const visibleSelectedId = emergencyOpen || filteredRecords.some((record) => record.id === selectedId)
+    ? selectedId
+    : filteredRecords[0]?.id ?? null;
+
   const selected = useMemo(
-    () => allRecords.find((record) => record.id === selectedId) ?? null,
-    [allRecords, selectedId],
+    () => allRecords.find((record) => record.id === visibleSelectedId) ?? null,
+    [allRecords, visibleSelectedId],
   );
 
   const emergencyLevels = useMemo(() => {
@@ -645,6 +650,11 @@ export function Dashboard() {
   const handleSelect = useCallback((record: ToiletRecord) => {
     setSelectedId(record.id);
   }, []);
+
+  const toggleEmergency = () => {
+    if (!emergencyOpen) setSelectedId(visibleSelectedId);
+    setEmergencyOpen((current) => !current);
+  };
 
   const updateFilter = <Key extends keyof FilterState>(key: Key, value: FilterState[Key]) => {
     setFilters((current) => ({ ...current, [key]: value }));
@@ -775,10 +785,10 @@ export function Dashboard() {
           <div className="map-frame">
             {loading && <div className="map-loading"><Radar size={24} /><span>正在展开上海厕所情报网…</span></div>}
             {loadError && <div className="map-error"><CircleAlert size={20} /><div><strong>数据暂未载入</strong><p>{loadError}</p></div></div>}
-            <ToiletMap records={filteredRecords} boundary={boundary} selectedId={selectedId} mode={mapMode} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />
+            <ToiletMap records={filteredRecords} boundary={boundary} selectedId={visibleSelectedId} mode={mapMode} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />
             <div className="map-scanlines" aria-hidden="true" />
             <div className="map-location"><MapPin size={14} /><span>{locationLabel}</span><button onClick={locateUser} aria-label="获取我的位置" title="获取我的位置"><LocateFixed size={15} /></button></div>
-            <button className="panic-button" onClick={() => setEmergencyOpen((current) => !current)}><Zap size={19} fill="currentColor" /><span><strong>憋不住了</strong><small>启动四级降级找厕</small></span><ChevronRight size={18} /></button>
+            <button className="panic-button" onClick={toggleEmergency}><Zap size={19} fill="currentColor" /><span><strong>憋不住了</strong><small>启动四级降级找厕</small></span><ChevronRight size={18} /></button>
             {mapNotice && <div className="map-notice"><CircleCheck size={15} /> {mapNotice}<button aria-label="关闭提示" title="关闭" onClick={() => setMapNotice(null)}><X size={14} /></button></div>}
             {emergencyOpen && (
               <div className="emergency-panel">

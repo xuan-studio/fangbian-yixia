@@ -42,11 +42,13 @@ test("public and premium datasets preserve truthful status", async () => {
 });
 
 test("offline and import contracts are packaged", async () => {
-  const [serviceWorker, schema, template, dashboard] = await Promise.all([
+  const [serviceWorker, schema, template, dashboard, styles, candidates] = await Promise.all([
     readFile(new URL("public/sw.js", root), "utf8"),
     readFile(new URL("public/data/toilet-record.schema.json", root), "utf8"),
     readFile(new URL("public/data/premium-import-template.json", root), "utf8"),
     readFile(new URL("app/Dashboard.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/xhs-candidates.json", root), "utf8").then(JSON.parse),
   ]);
   assert.match(serviceWorker, /public-toilets\.json/);
   assert.match(serviceWorker, /shanghai-boundary\.geojson/);
@@ -54,5 +56,11 @@ test("offline and import contracts are packaged", async () => {
   assert.match(template, /"records": \[\]/);
   assert.match(dashboard, /憋不住了/);
   assert.match(dashboard, /未知 ≠ 没有/);
+  assert.match(dashboard, /interleaved: false/);
+  assert.doesNotMatch(dashboard, /transitions:\s*\{\s*getElevation/);
+  assert.match(styles, /\.map-frame \.map-canvas\s*\{[^}]*height:\s*100%/s);
+  assert.equal(candidates.status, "pending_verification");
+  assert.ok(candidates.sourcePosts.length >= 9);
+  assert.ok(candidates.venueCandidates.every((candidate) => candidate.coordinates === null));
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });
