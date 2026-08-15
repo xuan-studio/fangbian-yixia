@@ -14,7 +14,9 @@ export type CommentRecord = {
   author: string;
   content: string;
   createdAt: string;
-  source: "session" | "imported";
+  source: "session" | "imported" | "xhs_note" | "xhs_aggregate" | "mock";
+  sourceLabel?: string | null;
+  sourceUrl?: string | null;
 };
 
 /**

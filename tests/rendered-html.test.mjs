@@ -37,6 +37,10 @@ test("public and premium datasets preserve truthful status", async () => {
   assert.equal(matchData.records.length, premiumData.records.length);
   assert.ok(premiumData.records.every((record) => record.sourceType === "premium_xhs"));
   assert.ok(premiumData.records.every((record) => record.dataStatus === "pending_verification"));
+  assert.ok(premiumData.records.every((record) => record.rating === null && record.reviewCount === null));
+  assert.ok(premiumData.records.every((record) => record.comments.length === 2));
+  assert.ok(premiumData.records.every((record) => record.comments.some((comment) => comment.source === "xhs_note" || comment.source === "xhs_aggregate")));
+  assert.ok(premiumData.records.every((record) => record.comments.some((comment) => comment.source === "mock" && comment.sourceLabel === "Mock 演示")));
   assert.ok(matchData.records.every((record) => record.mergeDecision === "keep_separate"));
   for (const record of publicData.records) {
     assert.equal(record.sourceType, "public_open_data");
@@ -56,6 +60,7 @@ test("offline and import contracts are packaged", async () => {
     readFile(new URL("public/data/xhs-candidates.json", root), "utf8").then(JSON.parse),
   ]);
   assert.match(serviceWorker, /public-toilets\.json/);
+  assert.match(serviceWorker, /premium-comment-seeds\.json/);
   assert.match(serviceWorker, /shanghai-boundary\.geojson/);
   assert.match(schema, /"title": "ToiletRecord"/);
   assert.match(template, /"records": \[\]/);

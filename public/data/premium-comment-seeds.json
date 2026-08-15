@@ -1,0 +1,95 @@
+{
+  "status": "ready",
+  "policy": "evidenceText 仅来自已保存的小红书笔记可见信息或聚合摘要；mockText 仅用于产品演示，不参与评分、设施确认或可信度计算。",
+  "records": [
+    {
+      "venue": "港汇恒隆广场",
+      "evidenceType": "xhs_aggregate",
+      "evidenceText": "榜单聚合观点提到穹顶、古铜色电梯和精致细节。",
+      "derivedTags": ["穹顶设计", "古铜电梯", "精致细节"],
+      "mockText": "像逛到酒店大堂一样，环境很出片；具体在哪层还需要现场补充。"
+    },
+    {
+      "venue": "兴业太古汇",
+      "evidenceType": "xhs_aggregate",
+      "evidenceText": "榜单聚合观点强调艺术感、拍照效果和私密感。",
+      "derivedTags": ["艺术感", "拍照友好", "私密感"],
+      "mockText": "隔间体验比较私密，午间人多时可能需要等一会儿。"
+    },
+    {
+      "venue": "静安嘉里中心",
+      "evidenceType": "xhs_aggregate",
+      "evidenceText": "榜单聚合将这里列入黄金红榜，但暂未给出可核实的设施细节。",
+      "derivedTags": ["红榜线索"],
+      "mockText": "整体清爽，办公时段偶尔要排队；建议后续补充具体楼层。"
+    },
+    {
+      "venue": "五角场合生汇",
+      "evidenceType": "xhs_aggregate",
+      "evidenceText": "榜单聚合将这里列入黄金红榜，但暂未给出可核实的设施细节。",
+      "derivedTags": ["红榜线索"],
+      "mockText": "周末用餐高峰人不少，可以优先找人流较少的楼层。"
+    },
+    {
+      "venue": "久光百货",
+      "noteId": "68f1ca67000000000401205d",
+      "evidenceType": "xhs_note",
+      "evidenceText": "可见笔记标题把久光列入“南京西路入门级厕所”专题。",
+      "derivedTags": ["南京西路", "入门级厕所"],
+      "mockText": "位置对南京西路逛街路线很顺手，但楼层指引还可以更明显。"
+    },
+    {
+      "venue": "比斯特上海购物村",
+      "evidenceType": "xhs_aggregate",
+      "evidenceText": "榜单聚合观点提到索尼娅·德劳内主题和彩色马赛克几何空间。",
+      "derivedTags": ["艺术主题", "彩色马赛克", "几何空间"],
+      "mockText": "不像普通公共空间，配色很大胆，适合顺路拍一张。"
+    },
+    {
+      "venue": "汇金百货",
+      "evidenceType": "xhs_aggregate",
+      "evidenceText": "榜单聚合观点提到 5 楼东南侧的太空舱主题卫生间。",
+      "derivedTags": ["太空舱主题", "5楼线索"],
+      "mockText": "主题感挺完整，第一次去最好按商场指引找东南侧。"
+    },
+    {
+      "venue": "中信泰富广场",
+      "evidenceType": "xhs_aggregate",
+      "evidenceText": "榜单聚合观点提到渐变粉色装修和适合拍照的光线。",
+      "derivedTags": ["渐变粉色", "光线友好", "拍照友好"],
+      "mockText": "灯光比普通商场厕所柔和，粉色空间记忆点很强。"
+    },
+    {
+      "venue": "上海环球港",
+      "noteId": "695526e2000000001e005e5d",
+      "evidenceType": "xhs_note",
+      "evidenceText": "可见笔记标题称这里有“唯一蹲坑厕所”，具体位置仍待原帖或现场核实。",
+      "derivedTags": ["蹲厕攻略", "唯一蹲坑线索"],
+      "mockText": "对只习惯蹲厕的人很关键，最需要补充的就是准确楼层和方向。"
+    },
+    {
+      "venue": "上海荟聚",
+      "noteId": "697f06fe000000000a02f1a2",
+      "evidenceType": "xhs_note",
+      "evidenceText": "可见笔记标题为“上海荟聚蹲坑攻略”，说明蹲厕位置是用户关注点。",
+      "derivedTags": ["蹲厕攻略", "位置关注"],
+      "mockText": "商场很大，知道哪层有蹲厕能省很多时间，建议补一张路径图。"
+    },
+    {
+      "venue": "芮欧百货",
+      "noteId": "68f1ca67000000000401205d",
+      "evidenceType": "xhs_note",
+      "evidenceText": "可见笔记标题把芮欧列入“南京西路入门级厕所”专题。",
+      "derivedTags": ["南京西路", "入门级厕所"],
+      "mockText": "逛南京西路时可以作为顺路备选，具体层数还需要更明确。"
+    },
+    {
+      "venue": "上海万象城",
+      "noteId": "69d61f82000000001a02d76e",
+      "evidenceType": "xhs_note",
+      "evidenceText": "可见笔记标题直接表达了对上海万象城卫生间的好评。",
+      "derivedTags": ["单点好评", "商场卫生间"],
+      "mockText": "整体体验比预期好，适合在闵行商圈做一个可稳定找到的备选点。"
+    }
+  ]
+}

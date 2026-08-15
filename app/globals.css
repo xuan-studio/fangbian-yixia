@@ -1083,11 +1083,56 @@ a {
   font-size: 10px;
 }
 
+.comment-list {
+  display: grid;
+  gap: 6px;
+  max-height: 246px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
 .comment-list > div {
   position: relative;
-  padding: 8px 0 8px 10px;
+  padding: 9px 10px;
+  background: rgba(7, 16, 25, 0.62);
   border-left: 2px solid var(--line-strong);
-  border-bottom: 1px dashed var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.comment-list > .source-xhs_note,
+.comment-list > .source-xhs_aggregate {
+  border-left-color: var(--gold);
+}
+
+.comment-list > .source-mock {
+  background: rgba(132, 102, 235, 0.07);
+  border-left-color: #9a7ff0;
+}
+
+.comment-list > .source-session {
+  border-left-color: var(--lime);
+}
+
+.comment-author,
+.comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.comment-author span {
+  flex: 0 0 auto;
+  padding: 3px 5px;
+  border: 1px solid rgba(245, 168, 36, 0.35);
+  color: var(--gold);
+  font: 7px/1 var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+.source-mock .comment-author span {
+  border-color: rgba(154, 127, 240, 0.42);
+  color: #bba9f7;
 }
 
 .comment-list strong,
@@ -1096,6 +1141,7 @@ a {
 .comment-list strong { font-size: 10px; }
 .comment-list p { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.45; }
 .comment-list small { margin-top: 4px; color: var(--faint); font-size: 8px; }
+.comment-meta a { margin-top: 4px; color: var(--cyan); font-size: 8px; }
 
 .comment-form {
   height: 34px;
@@ -1543,11 +1589,15 @@ a {
 .theme-light .facility-cell,
 .theme-light .unknown-line,
 .theme-light .source-card,
+.theme-light .comment-list > div,
 .theme-light .comment-form input,
 .theme-light .note-field textarea,
 .theme-light .honest-empty {
   background: #fffdf8;
 }
+
+.theme-light .comment-list > .source-mock { background: #faf7ff; }
+.theme-light .source-mock .comment-author span { color: #674bbd; }
 
 .theme-light .search-field input,
 .theme-light .two-fields select,

@@ -1,6 +1,6 @@
 {
   "status": "ready",
-  "sourceNote": "12 个小红书榜单/专题场所已匹配到上海 POI。坐标为商场中心或场内 POI，厕所楼层与设施继续标记待核实。",
+  "sourceNote": "12 个小红书榜单/专题场所已匹配到上海 POI，并加入可追溯的平台观点与明确标注的 Mock 评论。坐标为商场中心或场内 POI，厕所楼层与设施继续标记待核实。",
   "records": [
     {
       "id": "premium-xhs-01-venue-grand-gateway-66",
@@ -30,6 +30,9 @@
         "小红书榜单",
         "黄金红榜",
         "商场厕所",
+        "穹顶设计",
+        "古铜电梯",
+        "精致细节",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -37,7 +40,26 @@
       "healthScore": null,
       "confidence": 0.82,
       "description": "聚合摘要将其列入黄金红榜，提到穹顶、古铜色电梯和精致细节。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-01",
+          "author": "小红书榜单聚合",
+          "content": "榜单聚合观点提到穹顶、古铜色电梯和精致细节。",
+          "createdAt": "2026-08-15 提取",
+          "source": "xhs_aggregate",
+          "sourceLabel": "53 篇笔记聚合",
+          "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95"
+        },
+        {
+          "id": "mock-comment-01",
+          "author": "Mock · 匿名用户",
+          "content": "像逛到酒店大堂一样，环境很出片；具体在哪层还需要现场补充。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -68,6 +90,9 @@
         "小红书榜单",
         "黄金红榜",
         "商场厕所",
+        "艺术感",
+        "拍照友好",
+        "私密感",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -75,7 +100,26 @@
       "healthScore": null,
       "confidence": 0.7,
       "description": "聚合摘要将其列入黄金红榜，强调艺术感、拍照效果和私密感。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-02",
+          "author": "小红书榜单聚合",
+          "content": "榜单聚合观点强调艺术感、拍照效果和私密感。",
+          "createdAt": "2026-08-15 提取",
+          "source": "xhs_aggregate",
+          "sourceLabel": "53 篇笔记聚合",
+          "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95"
+        },
+        {
+          "id": "mock-comment-02",
+          "author": "Mock · 匿名用户",
+          "content": "隔间体验比较私密，午间人多时可能需要等一会儿。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -106,6 +150,7 @@
         "小红书榜单",
         "黄金红榜",
         "商场厕所",
+        "红榜线索",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -113,7 +158,26 @@
       "healthScore": null,
       "confidence": 0.95,
       "description": "聚合摘要将其列入黄金红榜，但尚未读取到具体厕所设施描述。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-03",
+          "author": "小红书榜单聚合",
+          "content": "榜单聚合将这里列入黄金红榜，但暂未给出可核实的设施细节。",
+          "createdAt": "2026-08-15 提取",
+          "source": "xhs_aggregate",
+          "sourceLabel": "53 篇笔记聚合",
+          "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95"
+        },
+        {
+          "id": "mock-comment-03",
+          "author": "Mock · 匿名用户",
+          "content": "整体清爽，办公时段偶尔要排队；建议后续补充具体楼层。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -144,6 +208,7 @@
         "小红书榜单",
         "黄金红榜",
         "商场厕所",
+        "红榜线索",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -151,15 +216,34 @@
       "healthScore": null,
       "confidence": 0.95,
       "description": "聚合摘要将其列入黄金红榜，但尚未读取到具体厕所设施描述。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-04",
+          "author": "小红书榜单聚合",
+          "content": "榜单聚合将这里列入黄金红榜，但暂未给出可核实的设施细节。",
+          "createdAt": "2026-08-15 提取",
+          "source": "xhs_aggregate",
+          "sourceLabel": "53 篇笔记聚合",
+          "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95"
+        },
+        {
+          "id": "mock-comment-04",
+          "author": "Mock · 匿名用户",
+          "content": "周末用餐高峰人不少，可以优先找人流较少的楼层。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
       "id": "premium-xhs-05-venue-jiuguang-jingan",
       "sourceType": "premium_xhs",
       "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
-      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
-      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "sourceUrl": "https://www.xiaohongshu.com/explore/68f1ca67000000000401205d",
+      "sourceRef": "xiaohongshu:68f1ca67000000000401205d",
       "dataStatus": "pending_verification",
       "name": "久光百货 · 榜单厕所",
       "district": "静安区",
@@ -182,6 +266,8 @@
         "小红书榜单",
         "黄金红榜",
         "商场厕所",
+        "南京西路",
+        "入门级厕所",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -189,7 +275,26 @@
       "healthScore": null,
       "confidence": 0.94,
       "description": "聚合摘要将其列入黄金红榜；搜索结果另有南京西路 1788、久光、芮欧的专题笔记。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-05",
+          "author": "探厕器POV",
+          "content": "可见笔记标题把久光列入“南京西路入门级厕所”专题。",
+          "createdAt": "2025-10-17",
+          "source": "xhs_note",
+          "sourceLabel": "笔记可见信息",
+          "sourceUrl": "https://www.xiaohongshu.com/explore/68f1ca67000000000401205d"
+        },
+        {
+          "id": "mock-comment-05",
+          "author": "Mock · 匿名用户",
+          "content": "位置对南京西路逛街路线很顺手，但楼层指引还可以更明显。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -220,6 +325,9 @@
         "小红书榜单",
         "设计特色榜",
         "商场厕所",
+        "艺术主题",
+        "彩色马赛克",
+        "几何空间",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -227,7 +335,26 @@
       "healthScore": null,
       "confidence": 0.9,
       "description": "聚合摘要提到索尼娅·德劳内主题厕所和彩色马赛克几何空间。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-06",
+          "author": "小红书榜单聚合",
+          "content": "榜单聚合观点提到索尼娅·德劳内主题和彩色马赛克几何空间。",
+          "createdAt": "2026-08-15 提取",
+          "source": "xhs_aggregate",
+          "sourceLabel": "53 篇笔记聚合",
+          "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95"
+        },
+        {
+          "id": "mock-comment-06",
+          "author": "Mock · 匿名用户",
+          "content": "不像普通公共空间，配色很大胆，适合顺路拍一张。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -258,6 +385,8 @@
         "小红书榜单",
         "设计特色榜",
         "商场厕所",
+        "太空舱主题",
+        "5楼线索",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -265,7 +394,26 @@
       "healthScore": null,
       "confidence": 0.92,
       "description": "聚合摘要提到 5 楼东南侧的太空舱主题卫生间。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-07",
+          "author": "小红书榜单聚合",
+          "content": "榜单聚合观点提到 5 楼东南侧的太空舱主题卫生间。",
+          "createdAt": "2026-08-15 提取",
+          "source": "xhs_aggregate",
+          "sourceLabel": "53 篇笔记聚合",
+          "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95"
+        },
+        {
+          "id": "mock-comment-07",
+          "author": "Mock · 匿名用户",
+          "content": "主题感挺完整，第一次去最好按商场指引找东南侧。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -296,6 +444,9 @@
         "小红书榜单",
         "设计特色榜",
         "商场厕所",
+        "渐变粉色",
+        "光线友好",
+        "拍照友好",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -303,7 +454,26 @@
       "healthScore": null,
       "confidence": 0.84,
       "description": "聚合摘要提到渐变粉色装修和适合拍照的光线。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-08",
+          "author": "小红书榜单聚合",
+          "content": "榜单聚合观点提到渐变粉色装修和适合拍照的光线。",
+          "createdAt": "2026-08-15 提取",
+          "source": "xhs_aggregate",
+          "sourceLabel": "53 篇笔记聚合",
+          "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95"
+        },
+        {
+          "id": "mock-comment-08",
+          "author": "Mock · 匿名用户",
+          "content": "灯光比普通商场厕所柔和，粉色空间记忆点很强。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -334,6 +504,8 @@
         "小红书榜单",
         "蹲厕专题",
         "商场厕所",
+        "蹲厕攻略",
+        "唯一蹲坑线索",
         "具体楼层待核实",
         "蹲厕线索"
       ],
@@ -342,7 +514,26 @@
       "healthScore": null,
       "confidence": 0.96,
       "description": "搜索结果出现“上海环球港｜唯一蹲坑厕所”专题，具体楼层仍待读取原帖核实。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-09",
+          "author": "村姑大人",
+          "content": "可见笔记标题称这里有“唯一蹲坑厕所”，具体位置仍待原帖或现场核实。",
+          "createdAt": "2025-12-31",
+          "source": "xhs_note",
+          "sourceLabel": "笔记可见信息",
+          "sourceUrl": "https://www.xiaohongshu.com/explore/695526e2000000001e005e5d"
+        },
+        {
+          "id": "mock-comment-09",
+          "author": "Mock · 匿名用户",
+          "content": "对只习惯蹲厕的人很关键，最需要补充的就是准确楼层和方向。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -373,6 +564,8 @@
         "小红书榜单",
         "蹲厕专题",
         "商场厕所",
+        "蹲厕攻略",
+        "位置关注",
         "具体楼层待核实",
         "蹲厕线索"
       ],
@@ -381,7 +574,26 @@
       "healthScore": null,
       "confidence": 0.76,
       "description": "搜索结果出现“上海荟聚蹲坑攻略”专题，具体楼层仍待读取原帖核实。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-10",
+          "author": "村姑大人",
+          "content": "可见笔记标题为“上海荟聚蹲坑攻略”，说明蹲厕位置是用户关注点。",
+          "createdAt": "02-01",
+          "source": "xhs_note",
+          "sourceLabel": "笔记可见信息",
+          "sourceUrl": "https://www.xiaohongshu.com/explore/697f06fe000000000a02f1a2"
+        },
+        {
+          "id": "mock-comment-10",
+          "author": "Mock · 匿名用户",
+          "content": "商场很大，知道哪层有蹲厕能省很多时间，建议补一张路径图。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -412,6 +624,8 @@
         "小红书榜单",
         "南京西路专题",
         "商场厕所",
+        "南京西路",
+        "入门级厕所",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -419,7 +633,26 @@
       "healthScore": null,
       "confidence": 0.96,
       "description": "搜索结果出现“南京西路入门级厕所，1788，久光，芮欧”专题。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-11",
+          "author": "探厕器POV",
+          "content": "可见笔记标题把芮欧列入“南京西路入门级厕所”专题。",
+          "createdAt": "2025-10-17",
+          "source": "xhs_note",
+          "sourceLabel": "笔记可见信息",
+          "sourceUrl": "https://www.xiaohongshu.com/explore/68f1ca67000000000401205d"
+        },
+        {
+          "id": "mock-comment-11",
+          "author": "Mock · 匿名用户",
+          "content": "逛南京西路时可以作为顺路备选，具体层数还需要更明确。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     },
     {
@@ -450,6 +683,7 @@
         "小红书榜单",
         "单点好评",
         "商场厕所",
+        "商场卫生间",
         "具体楼层待核实"
       ],
       "rating": null,
@@ -457,7 +691,26 @@
       "healthScore": null,
       "confidence": 0.72,
       "description": "搜索结果出现“上海万象城的卫生间好评～”单点笔记。 当前坐标为商场场所点，不代表厕所精确楼层。",
-      "comments": [],
+      "comments": [
+        {
+          "id": "xhs-evidence-12",
+          "author": "小小食伤女",
+          "content": "可见笔记标题直接表达了对上海万象城卫生间的好评。",
+          "createdAt": "04-08",
+          "source": "xhs_note",
+          "sourceLabel": "笔记可见信息",
+          "sourceUrl": "https://www.xiaohongshu.com/explore/69d61f82000000001a02d76e"
+        },
+        {
+          "id": "mock-comment-12",
+          "author": "Mock · 匿名用户",
+          "content": "整体体验比预期好，适合在闵行商圈做一个可稳定找到的备选点。",
+          "createdAt": "演示数据",
+          "source": "mock",
+          "sourceLabel": "Mock 演示",
+          "sourceUrl": null
+        }
+      ],
       "updatedAt": "2026-08-15"
     }
   ]

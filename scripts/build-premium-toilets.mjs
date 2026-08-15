@@ -2,10 +2,11 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const root = new URL("../", import.meta.url);
 
-const [candidateData, venueData, publicData] = await Promise.all([
+const [candidateData, venueData, publicData, commentSeedData] = await Promise.all([
   readFile(new URL("public/data/xhs-candidates.json", root), "utf8").then(JSON.parse),
   readFile(new URL("public/data/venue-pois.json", root), "utf8").then(JSON.parse),
   readFile(new URL("public/data/public-toilets.json", root), "utf8").then(JSON.parse),
+  readFile(new URL("public/data/premium-comment-seeds.json", root), "utf8").then(JSON.parse),
 ]);
 
 const SEARCH_SOURCE_URL = "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95";
@@ -71,8 +72,11 @@ const matches = rankingSpecs.map((spec) => {
   if (!venue) throw new Error(`缺少场所 POI：${spec.venue}`);
 
   const candidate = candidateData.venueCandidates.find((item) => item.name === spec.venue);
-  const sourcePost = spec.noteId
-    ? candidateData.sourcePosts.find((item) => item.noteId === spec.noteId)
+  const commentSeed = commentSeedData.records.find((item) => item.venue === spec.venue);
+  if (!commentSeed) throw new Error(`缺少评论种子：${spec.venue}`);
+  const noteId = commentSeed.noteId ?? spec.noteId;
+  const sourcePost = noteId
+    ? candidateData.sourcePosts.find((item) => item.noteId === noteId)
     : null;
   const nearest = publicData.records
     .map((record) => ({
@@ -86,8 +90,28 @@ const matches = rankingSpecs.map((spec) => {
   const evidenceSummary = spec.evidenceSummary ?? candidate?.evidenceSummary ?? "小红书榜单候选，具体厕所信息待核实。";
   const sourceUrl = sourcePost?.sourceUrl ?? SEARCH_SOURCE_URL;
   const sourceRef = sourcePost ? `xiaohongshu:${sourcePost.noteId}` : "xiaohongshu:ai-summary-53-notes";
-  const tags = ["小红书榜单", spec.group, "商场厕所", "具体楼层待核实"];
-  if (spec.squat === true) tags.push("蹲厕线索");
+  const tags = [...new Set(["小红书榜单", spec.group, "商场厕所", ...commentSeed.derivedTags, "具体楼层待核实"])];
+  if (spec.squat === true && !tags.includes("蹲厕线索")) tags.push("蹲厕线索");
+  const comments = [
+    {
+      id: `xhs-evidence-${slug(spec.rank)}`,
+      author: sourcePost?.author ?? "小红书榜单聚合",
+      content: commentSeed.evidenceText,
+      createdAt: sourcePost?.publishedLabel ?? `${candidateData.collectedAt} 提取`,
+      source: commentSeed.evidenceType,
+      sourceLabel: commentSeed.evidenceType === "xhs_note" ? "笔记可见信息" : "53 篇笔记聚合",
+      sourceUrl: sourcePost?.sourceUrl ?? SEARCH_SOURCE_URL,
+    },
+    {
+      id: `mock-comment-${slug(spec.rank)}`,
+      author: "Mock · 匿名用户",
+      content: commentSeed.mockText,
+      createdAt: "演示数据",
+      source: "mock",
+      sourceLabel: "Mock 演示",
+      sourceUrl: null,
+    },
+  ];
 
   return {
     premiumRecord: {
@@ -117,7 +141,7 @@ const matches = rankingSpecs.map((spec) => {
       healthScore: null,
       confidence: venue.matchConfidence,
       description: `${evidenceSummary} 当前坐标为商场场所点，不代表厕所精确楼层。`,
-      comments: [],
+      comments,
       updatedAt: "2026-08-15"
     },
     match: {
@@ -137,7 +161,7 @@ const matches = rankingSpecs.map((spec) => {
 
 const premiumDataset = {
   status: "ready",
-  sourceNote: "12 个小红书榜单/专题场所已匹配到上海 POI。坐标为商场中心或场内 POI，厕所楼层与设施继续标记待核实。",
+  sourceNote: "12 个小红书榜单/专题场所已匹配到上海 POI，并加入可追溯的平台观点与明确标注的 Mock 评论。坐标为商场中心或场内 POI，厕所楼层与设施继续标记待核实。",
   records: matches.map((item) => item.premiumRecord),
 };
 

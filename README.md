@@ -35,6 +35,7 @@ npm test
 - JSON Schema：`public/data/toilet-record.schema.json`。
 - 公开数据：`public/data/public-toilets.json`。
 - 优质榜单：`public/data/premium-toilets.json`，当前包含 12 个 `pending_verification` 场所点。
+- 评论种子：`public/data/premium-comment-seeds.json`，为每个场所保存一条平台证据观点、一组证据标签和一条明确标注的 Mock 评论。
 - 匹配审计：`public/data/premium-matches.json`，保留场所点与最近公开厕所的距离，并明确不自动合并。
 - 重新生成：`npm run build:premium`。
 - 导入空模板：`public/data/premium-import-template.json`。

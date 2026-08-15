@@ -203,6 +203,8 @@ function normalizeImportedRecord(input: unknown, index: number): ToiletRecord | 
             content: nullableString(comment.content) ?? "",
             createdAt: nullableString(comment.createdAt) ?? "待核实",
             source: "imported",
+            sourceLabel: nullableString(comment.sourceLabel) ?? "用户导入",
+            sourceUrl: nullableString(comment.sourceUrl),
           },
         ];
       })
@@ -270,6 +272,15 @@ function scoreLabel(record: ToiletRecord) {
   if (record.rating !== null) return record.rating.toFixed(1);
   if (record.confidence !== null) return `${Math.round(record.confidence * 100)}%`;
   return "待核实";
+}
+
+function commentSourceLabel(comment: CommentRecord) {
+  if (comment.sourceLabel) return comment.sourceLabel;
+  if (comment.source === "xhs_note") return "笔记可见信息";
+  if (comment.source === "xhs_aggregate") return "榜单聚合";
+  if (comment.source === "mock") return "Mock 演示";
+  if (comment.source === "session") return "现场补充";
+  return "用户导入";
 }
 
 function makeLayers(
@@ -769,6 +780,8 @@ export function Dashboard() {
       content: commentDraft.trim(),
       createdAt: "刚刚",
       source: "session",
+      sourceLabel: "现场补充",
+      sourceUrl: null,
     };
     setSessionComments((current) => ({
       ...current,
@@ -780,6 +793,8 @@ export function Dashboard() {
   const comments = selected
     ? [...selected.comments, ...(sessionComments[selected.id] ?? [])]
     : [];
+  const evidenceCommentCount = comments.filter((comment) => comment.source === "xhs_note" || comment.source === "xhs_aggregate").length;
+  const mockCommentCount = comments.filter((comment) => comment.source === "mock").length;
 
   return (
     <div className={`app-shell theme-${visualTheme}`}>
@@ -890,7 +905,7 @@ export function Dashboard() {
 
               <div className="detail-score-strip">
                 <div><span>{selected.rating !== null ? "用户评分" : "来源可信度"}</span><strong>{scoreLabel(selected)}</strong></div>
-                <div><span>点评</span><strong>{(selected.reviewCount ?? comments.length) || "—"}</strong></div>
+                <div><span>用户声音</span><strong>{(selected.reviewCount ?? comments.length) || "—"}</strong></div>
                 <div><span>健康度</span><strong>{selected.healthScore ?? "—"}</strong></div>
               </div>
 
@@ -916,8 +931,8 @@ export function Dashboard() {
               </section>
 
               <section className="detail-section comments-section">
-                <div className="section-heading"><span><MessageSquare size={15} /> 现场点评</span><small>本次会话</small></div>
-                {comments.length ? <div className="comment-list">{comments.slice(-2).map((comment) => <div key={comment.id}><strong>{comment.author}</strong><p>{comment.content}</p><small>{comment.createdAt}</small></div>)}</div> : <p className="empty-copy">还没有可信点评。第一条也要诚实。</p>}
+                <div className="section-heading"><span><MessageSquare size={15} /> 用户声音</span><small>{evidenceCommentCount} 条平台证据 · {mockCommentCount} 条 Mock</small></div>
+                {comments.length ? <div className="comment-list">{comments.slice(-4).map((comment) => <div key={comment.id} className={`comment-item source-${comment.source}`}><div className="comment-author"><strong>{comment.author}</strong><span>{commentSourceLabel(comment)}</span></div><p>{comment.content}</p><div className="comment-meta"><small>{comment.createdAt}</small>{comment.sourceUrl ? <a href={comment.sourceUrl} target="_blank" rel="noreferrer">查看来源</a> : null}</div></div>)}</div> : <p className="empty-copy">还没有可信点评。第一条也要诚实。</p>}
                 <form className="comment-form" onSubmit={addComment}><input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="补充气味、清洁或排队情况" /><button aria-label="提交点评" title="提交点评"><ChevronRight size={16} /></button></form>
               </section>
 

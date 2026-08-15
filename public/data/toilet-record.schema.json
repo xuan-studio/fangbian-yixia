@@ -50,7 +50,22 @@
     "healthScore": { "type": ["number", "null"] },
     "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
     "description": { "type": ["string", "null"] },
-    "comments": { "type": "array", "items": { "type": "object" } },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "author", "content", "createdAt", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "author": { "type": "string" },
+          "content": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "source": { "enum": ["session", "imported", "xhs_note", "xhs_aggregate", "mock"] },
+          "sourceLabel": { "type": ["string", "null"] },
+          "sourceUrl": { "type": ["string", "null"] }
+        }
+      }
+    },
     "updatedAt": { "type": ["string", "null"] }
   }
 }
