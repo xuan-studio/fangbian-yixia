@@ -26,13 +26,18 @@ test("server-renders the hackathon dashboard without starter metadata", async ()
 });
 
 test("public and premium datasets preserve truthful status", async () => {
-  const [publicData, premiumData] = await Promise.all([
+  const [publicData, premiumData, matchData] = await Promise.all([
     readFile(new URL("public/data/public-toilets.json", root), "utf8").then(JSON.parse),
     readFile(new URL("public/data/premium-toilets.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/premium-matches.json", root), "utf8").then(JSON.parse),
   ]);
   assert.ok(publicData.records.length >= 900);
-  assert.equal(premiumData.status, "pending_source");
-  assert.deepEqual(premiumData.records, []);
+  assert.equal(premiumData.status, "ready");
+  assert.equal(premiumData.records.length, 12);
+  assert.equal(matchData.records.length, premiumData.records.length);
+  assert.ok(premiumData.records.every((record) => record.sourceType === "premium_xhs"));
+  assert.ok(premiumData.records.every((record) => record.dataStatus === "pending_verification"));
+  assert.ok(matchData.records.every((record) => record.mergeDecision === "keep_separate"));
   for (const record of publicData.records) {
     assert.equal(record.sourceType, "public_open_data");
     assert.ok(record.coordinates.longitude >= 120.8 && record.coordinates.longitude <= 122.15);
@@ -58,14 +63,16 @@ test("offline and import contracts are packaged", async () => {
   assert.match(dashboard, /未知 ≠ 没有/);
   assert.match(dashboard, /interleaved: false/);
   assert.match(dashboard, /"light_all" : "dark_all"/);
-  assert.match(dashboard, /useState<VisualTheme>\("light"\)/);
+  assert.match(dashboard, /MAP_VISUAL_THEME: VisualTheme = "light"/);
+  assert.match(dashboard, /useState<VisualTheme>\("dark"\)/);
+  assert.match(dashboard, /theme=\{MAP_VISUAL_THEME\}/);
   assert.match(dashboard, /theme-\$\{visualTheme\}/);
   assert.doesNotMatch(dashboard, /dark-matter-gl-style\/style\.json/);
   assert.doesNotMatch(dashboard, /map\.on\("error", failOnline\)/);
   assert.doesNotMatch(dashboard, /transitions:\s*\{\s*getElevation/);
   assert.match(styles, /\.map-frame \.map-canvas\s*\{[^}]*height:\s*100%/s);
   assert.equal(candidates.status, "pending_verification");
-  assert.ok(candidates.sourcePosts.length >= 9);
+  assert.ok(candidates.sourcePosts.length >= 10);
   assert.ok(candidates.venueCandidates.every((candidate) => candidate.coordinates === null));
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });

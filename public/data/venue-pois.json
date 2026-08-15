@@ -1,0 +1,140 @@
+{
+  "status": "ready",
+  "generatedAt": "2026-08-15",
+  "source": "OpenStreetMap POI via Photon geocoder",
+  "coordinatePolicy": "坐标表示商场中心或商场内公开 POI，不表示厕所精确楼层。",
+  "records": [
+    {
+      "id": "venue-grand-gateway-66",
+      "name": "港汇恒隆广场",
+      "district": "徐汇区",
+      "address": "恭城路（港汇恒隆广场内，具体楼层待核实）",
+      "coordinates": { "longitude": 121.4323226, "latitude": 31.1959963 },
+      "precision": "venue_building",
+      "matchConfidence": 0.82,
+      "sourceRef": "osm:way/497892281",
+      "sourceUrl": "https://www.openstreetmap.org/way/497892281"
+    },
+    {
+      "id": "venue-hkri-taikoo-hui",
+      "name": "兴业太古汇",
+      "district": "静安区",
+      "address": "吴江路（兴业太古汇内，具体楼层待核实）",
+      "coordinates": { "longitude": 121.4580581, "latitude": 31.2325269 },
+      "precision": "in_venue_poi",
+      "matchConfidence": 0.7,
+      "sourceRef": "osm:node/5501874121",
+      "sourceUrl": "https://www.openstreetmap.org/node/5501874121"
+    },
+    {
+      "id": "venue-jingan-kerry-centre",
+      "name": "静安嘉里中心",
+      "district": "静安区",
+      "address": "南京西路1515号（具体楼层待核实）",
+      "coordinates": { "longitude": 121.4445924, "latitude": 31.2258707 },
+      "precision": "venue_centroid",
+      "matchConfidence": 0.95,
+      "sourceRef": "osm:way/255636963",
+      "sourceUrl": "https://www.openstreetmap.org/way/255636963"
+    },
+    {
+      "id": "venue-hopson-one",
+      "name": "五角场合生汇",
+      "district": "杨浦区",
+      "address": "黄兴路2218号（具体楼层待核实）",
+      "coordinates": { "longitude": 121.5135563, "latitude": 31.3018481 },
+      "precision": "venue_centroid",
+      "matchConfidence": 0.95,
+      "sourceRef": "osm:way/441927387",
+      "sourceUrl": "https://www.openstreetmap.org/way/441927387"
+    },
+    {
+      "id": "venue-jiuguang-jingan",
+      "name": "久光百货",
+      "district": "静安区",
+      "address": "南京西路1618号（具体楼层待核实）",
+      "coordinates": { "longitude": 121.441134, "latitude": 31.2258172 },
+      "precision": "venue_poi",
+      "matchConfidence": 0.94,
+      "sourceRef": "osm:node/573339616",
+      "sourceUrl": "https://www.openstreetmap.org/node/573339616"
+    },
+    {
+      "id": "venue-shanghai-village",
+      "name": "比斯特上海购物村",
+      "district": "浦东新区",
+      "address": "上海国际旅游度假区内（具体楼层待核实）",
+      "coordinates": { "longitude": 121.6758678, "latitude": 31.1413908 },
+      "precision": "venue_centroid",
+      "matchConfidence": 0.9,
+      "sourceRef": "osm:way/411234448",
+      "sourceUrl": "https://www.openstreetmap.org/way/411234448"
+    },
+    {
+      "id": "venue-huijin-xujiahui",
+      "name": "汇金百货",
+      "district": "徐汇区",
+      "address": "肇嘉浜路（徐家汇汇金百货内，具体楼层待核实）",
+      "coordinates": { "longitude": 121.4357913, "latitude": 31.1975855 },
+      "precision": "venue_centroid",
+      "matchConfidence": 0.92,
+      "sourceRef": "osm:way/786522548",
+      "sourceUrl": "https://www.openstreetmap.org/way/786522548"
+    },
+    {
+      "id": "venue-citic-square",
+      "name": "中信泰富广场",
+      "district": "静安区",
+      "address": "南京西路1168号（具体楼层待核实）",
+      "coordinates": { "longitude": 121.4513082, "latitude": 31.2300864 },
+      "precision": "venue_centroid",
+      "matchConfidence": 0.84,
+      "sourceRef": "osm:way/255637479",
+      "sourceUrl": "https://www.openstreetmap.org/way/255637479"
+    },
+    {
+      "id": "venue-global-harbor",
+      "name": "上海环球港",
+      "district": "普陀区",
+      "address": "中山北路3300号（蹲厕楼层待原帖核实）",
+      "coordinates": { "longitude": 121.4078266, "latitude": 31.2351161 },
+      "precision": "venue_centroid",
+      "matchConfidence": 0.96,
+      "sourceRef": "osm:way/375224849",
+      "sourceUrl": "https://www.openstreetmap.org/way/375224849"
+    },
+    {
+      "id": "venue-livat-shanghai",
+      "name": "上海荟聚",
+      "district": "长宁区",
+      "address": "北翟路788号（蹲厕楼层待原帖核实）",
+      "coordinates": { "longitude": 121.3525075, "latitude": 31.2243623 },
+      "precision": "in_venue_poi",
+      "matchConfidence": 0.76,
+      "sourceRef": "osm:node/12570884868",
+      "sourceUrl": "https://www.openstreetmap.org/node/12570884868"
+    },
+    {
+      "id": "venue-reel-mall",
+      "name": "芮欧百货",
+      "district": "静安区",
+      "address": "南京西路1601号（具体楼层待核实）",
+      "coordinates": { "longitude": 121.4428235, "latitude": 31.2249027 },
+      "precision": "venue_centroid",
+      "matchConfidence": 0.96,
+      "sourceRef": "osm:way/255631826",
+      "sourceUrl": "https://www.openstreetmap.org/way/255631826"
+    },
+    {
+      "id": "venue-shanghai-mixc",
+      "name": "上海万象城",
+      "district": "闵行区",
+      "address": "吴中路1599号（具体楼层待核实）",
+      "coordinates": { "longitude": 121.3647666, "latitude": 31.1726838 },
+      "precision": "in_venue_poi",
+      "matchConfidence": 0.72,
+      "sourceRef": "osm:node/6859683085",
+      "sourceUrl": "https://www.openstreetmap.org/node/6859683085"
+    }
+  ]
+}

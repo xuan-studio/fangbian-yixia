@@ -1,5 +1,464 @@
 {
-  "status": "pending_source",
-  "sourceNote": "小红书优质厕所榜单数据待用户提供。严禁生成模拟厕所或虚构评价。",
-  "records": []
+  "status": "ready",
+  "sourceNote": "12 个小红书榜单/专题场所已匹配到上海 POI。坐标为商场中心或场内 POI，厕所楼层与设施继续标记待核实。",
+  "records": [
+    {
+      "id": "premium-xhs-01-venue-grand-gateway-66",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
+      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "dataStatus": "pending_verification",
+      "name": "港汇恒隆广场 · 榜单厕所",
+      "district": "徐汇区",
+      "address": "恭城路（港汇恒隆广场内，具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.4323226,
+        "latitude": 31.1959963
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "黄金红榜",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.82,
+      "description": "聚合摘要将其列入黄金红榜，提到穹顶、古铜色电梯和精致细节。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-02-venue-hkri-taikoo-hui",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
+      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "dataStatus": "pending_verification",
+      "name": "兴业太古汇 · 榜单厕所",
+      "district": "静安区",
+      "address": "吴江路（兴业太古汇内，具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.4580581,
+        "latitude": 31.2325269
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "黄金红榜",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.7,
+      "description": "聚合摘要将其列入黄金红榜，强调艺术感、拍照效果和私密感。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-03-venue-jingan-kerry-centre",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
+      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "dataStatus": "pending_verification",
+      "name": "静安嘉里中心 · 榜单厕所",
+      "district": "静安区",
+      "address": "南京西路1515号（具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.4445924,
+        "latitude": 31.2258707
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "黄金红榜",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.95,
+      "description": "聚合摘要将其列入黄金红榜，但尚未读取到具体厕所设施描述。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-04-venue-hopson-one",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
+      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "dataStatus": "pending_verification",
+      "name": "五角场合生汇 · 榜单厕所",
+      "district": "杨浦区",
+      "address": "黄兴路2218号（具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.5135563,
+        "latitude": 31.3018481
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "黄金红榜",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.95,
+      "description": "聚合摘要将其列入黄金红榜，但尚未读取到具体厕所设施描述。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-05-venue-jiuguang-jingan",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
+      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "dataStatus": "pending_verification",
+      "name": "久光百货 · 榜单厕所",
+      "district": "静安区",
+      "address": "南京西路1618号（具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.441134,
+        "latitude": 31.2258172
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "黄金红榜",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.94,
+      "description": "聚合摘要将其列入黄金红榜；搜索结果另有南京西路 1788、久光、芮欧的专题笔记。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-06-venue-shanghai-village",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
+      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "dataStatus": "pending_verification",
+      "name": "比斯特上海购物村 · 榜单厕所",
+      "district": "浦东新区",
+      "address": "上海国际旅游度假区内（具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.6758678,
+        "latitude": 31.1413908
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "设计特色榜",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.9,
+      "description": "聚合摘要提到索尼娅·德劳内主题厕所和彩色马赛克几何空间。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-07-venue-huijin-xujiahui",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
+      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "dataStatus": "pending_verification",
+      "name": "汇金百货 · 榜单厕所",
+      "district": "徐汇区",
+      "address": "肇嘉浜路（徐家汇汇金百货内，具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.4357913,
+        "latitude": 31.1975855
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "设计特色榜",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.92,
+      "description": "聚合摘要提到 5 楼东南侧的太空舱主题卫生间。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-08-venue-citic-square",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8E%95%E6%89%80%E6%A6%9C%E5%8D%95",
+      "sourceRef": "xiaohongshu:ai-summary-53-notes",
+      "dataStatus": "pending_verification",
+      "name": "中信泰富广场 · 榜单厕所",
+      "district": "静安区",
+      "address": "南京西路1168号（具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.4513082,
+        "latitude": 31.2300864
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "设计特色榜",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.84,
+      "description": "聚合摘要提到渐变粉色装修和适合拍照的光线。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-09-venue-global-harbor",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/explore/695526e2000000001e005e5d",
+      "sourceRef": "xiaohongshu:695526e2000000001e005e5d",
+      "dataStatus": "pending_verification",
+      "name": "上海环球港 · 榜单厕所",
+      "district": "普陀区",
+      "address": "中山北路3300号（蹲厕楼层待原帖核实）",
+      "coordinates": {
+        "longitude": 121.4078266,
+        "latitude": 31.2351161
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": true,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "蹲厕专题",
+        "商场厕所",
+        "具体楼层待核实",
+        "蹲厕线索"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.96,
+      "description": "搜索结果出现“上海环球港｜唯一蹲坑厕所”专题，具体楼层仍待读取原帖核实。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-10-venue-livat-shanghai",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/explore/697f06fe000000000a02f1a2",
+      "sourceRef": "xiaohongshu:697f06fe000000000a02f1a2",
+      "dataStatus": "pending_verification",
+      "name": "上海荟聚 · 榜单厕所",
+      "district": "长宁区",
+      "address": "北翟路788号（蹲厕楼层待原帖核实）",
+      "coordinates": {
+        "longitude": 121.3525075,
+        "latitude": 31.2243623
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": true,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "蹲厕专题",
+        "商场厕所",
+        "具体楼层待核实",
+        "蹲厕线索"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.76,
+      "description": "搜索结果出现“上海荟聚蹲坑攻略”专题，具体楼层仍待读取原帖核实。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-11-venue-reel-mall",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/explore/68f1ca67000000000401205d",
+      "sourceRef": "xiaohongshu:68f1ca67000000000401205d",
+      "dataStatus": "pending_verification",
+      "name": "芮欧百货 · 榜单厕所",
+      "district": "静安区",
+      "address": "南京西路1601号（具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.4428235,
+        "latitude": 31.2249027
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "南京西路专题",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.96,
+      "description": "搜索结果出现“南京西路入门级厕所，1788，久光，芮欧”专题。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    },
+    {
+      "id": "premium-xhs-12-venue-shanghai-mixc",
+      "sourceType": "premium_xhs",
+      "sourceName": "小红书榜单线索 + OpenStreetMap 场所匹配",
+      "sourceUrl": "https://www.xiaohongshu.com/explore/69d61f82000000001a02d76e",
+      "sourceRef": "xiaohongshu:69d61f82000000001a02d76e",
+      "dataStatus": "pending_verification",
+      "name": "上海万象城 · 榜单厕所",
+      "district": "闵行区",
+      "address": "吴中路1599号（具体楼层待核实）",
+      "coordinates": {
+        "longitude": 121.3647666,
+        "latitude": 31.1726838
+      },
+      "openingHours": null,
+      "open24h": null,
+      "facility": {
+        "squat": null,
+        "seated": null,
+        "accessible": null,
+        "thirdRestroom": null,
+        "babyCare": null
+      },
+      "crowd": null,
+      "tags": [
+        "小红书榜单",
+        "单点好评",
+        "商场厕所",
+        "具体楼层待核实"
+      ],
+      "rating": null,
+      "reviewCount": null,
+      "healthScore": null,
+      "confidence": 0.72,
+      "description": "搜索结果出现“上海万象城的卫生间好评～”单点笔记。 当前坐标为商场场所点，不代表厕所精确楼层。",
+      "comments": [],
+      "updatedAt": "2026-08-15"
+    }
+  ]
 }

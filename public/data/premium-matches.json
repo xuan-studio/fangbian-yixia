@@ -1,0 +1,211 @@
+{
+  "status": "ready",
+  "generatedAt": "2026-08-15",
+  "policy": "榜单厕所与最近公开厕所保持独立，不自动合并。",
+  "records": [
+    {
+      "rank": 1,
+      "group": "黄金红榜",
+      "venueId": "venue-grand-gateway-66",
+      "venueName": "港汇恒隆广场",
+      "venuePrecision": "venue_building",
+      "venueMatchConfidence": 0.82,
+      "venueSourceRef": "osm:way/497892281",
+      "nearestPublicToilet": {
+        "id": "osm-node-640601945",
+        "name": "徐汇区公共厕所",
+        "sourceRef": "node/640601945",
+        "distanceMeters": 170
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 2,
+      "group": "黄金红榜",
+      "venueId": "venue-hkri-taikoo-hui",
+      "venueName": "兴业太古汇",
+      "venuePrecision": "in_venue_poi",
+      "venueMatchConfidence": 0.7,
+      "venueSourceRef": "osm:node/5501874121",
+      "nearestPublicToilet": {
+        "id": "osm-node-1490094607",
+        "name": "静安区公共厕所",
+        "sourceRef": "node/1490094607",
+        "distanceMeters": 123
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 3,
+      "group": "黄金红榜",
+      "venueId": "venue-jingan-kerry-centre",
+      "venueName": "静安嘉里中心",
+      "venuePrecision": "venue_centroid",
+      "venueMatchConfidence": 0.95,
+      "venueSourceRef": "osm:way/255636963",
+      "nearestPublicToilet": {
+        "id": "osm-node-4454361390",
+        "name": "静安区公共厕所",
+        "sourceRef": "node/4454361390",
+        "distanceMeters": 136
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 4,
+      "group": "黄金红榜",
+      "venueId": "venue-hopson-one",
+      "venueName": "五角场合生汇",
+      "venuePrecision": "venue_centroid",
+      "venueMatchConfidence": 0.95,
+      "venueSourceRef": "osm:way/441927387",
+      "nearestPublicToilet": {
+        "id": "osm-node-13055547239",
+        "name": "杨浦区公共厕所",
+        "sourceRef": "node/13055547239",
+        "distanceMeters": 839
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 5,
+      "group": "黄金红榜",
+      "venueId": "venue-jiuguang-jingan",
+      "venueName": "久光百货",
+      "venuePrecision": "venue_poi",
+      "venueMatchConfidence": 0.94,
+      "venueSourceRef": "osm:node/573339616",
+      "nearestPublicToilet": {
+        "id": "osm-node-6346445101",
+        "name": "静安区公共厕所",
+        "sourceRef": "node/6346445101",
+        "distanceMeters": 205
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 6,
+      "group": "设计特色榜",
+      "venueId": "venue-shanghai-village",
+      "venueName": "比斯特上海购物村",
+      "venuePrecision": "venue_centroid",
+      "venueMatchConfidence": 0.9,
+      "venueSourceRef": "osm:way/411234448",
+      "nearestPublicToilet": {
+        "id": "osm-node-4780216866",
+        "name": "浦东新区公共厕所",
+        "sourceRef": "node/4780216866",
+        "distanceMeters": 250
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 7,
+      "group": "设计特色榜",
+      "venueId": "venue-huijin-xujiahui",
+      "venueName": "汇金百货",
+      "venuePrecision": "venue_centroid",
+      "venueMatchConfidence": 0.92,
+      "venueSourceRef": "osm:way/786522548",
+      "nearestPublicToilet": {
+        "id": "osm-node-5273509685",
+        "name": "徐汇区公共厕所",
+        "sourceRef": "node/5273509685",
+        "distanceMeters": 139
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 8,
+      "group": "设计特色榜",
+      "venueId": "venue-citic-square",
+      "venueName": "中信泰富广场",
+      "venuePrecision": "venue_centroid",
+      "venueMatchConfidence": 0.84,
+      "venueSourceRef": "osm:way/255637479",
+      "nearestPublicToilet": {
+        "id": "osm-node-12361074601",
+        "name": "静安区公共厕所",
+        "sourceRef": "node/12361074601",
+        "distanceMeters": 287
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 9,
+      "group": "蹲厕专题",
+      "venueId": "venue-global-harbor",
+      "venueName": "上海环球港",
+      "venuePrecision": "venue_centroid",
+      "venueMatchConfidence": 0.96,
+      "venueSourceRef": "osm:way/375224849",
+      "nearestPublicToilet": {
+        "id": "osm-node-1130827805",
+        "name": "普陀区公共厕所",
+        "sourceRef": "node/1130827805",
+        "distanceMeters": 347
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 10,
+      "group": "蹲厕专题",
+      "venueId": "venue-livat-shanghai",
+      "venueName": "上海荟聚",
+      "venuePrecision": "in_venue_poi",
+      "venueMatchConfidence": 0.76,
+      "venueSourceRef": "osm:node/12570884868",
+      "nearestPublicToilet": {
+        "id": "osm-node-6761347742",
+        "name": "长宁区公共厕所",
+        "sourceRef": "node/6761347742",
+        "distanceMeters": 244
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 11,
+      "group": "南京西路专题",
+      "venueId": "venue-reel-mall",
+      "venueName": "芮欧百货",
+      "venuePrecision": "venue_centroid",
+      "venueMatchConfidence": 0.96,
+      "venueSourceRef": "osm:way/255631826",
+      "nearestPublicToilet": {
+        "id": "osm-node-4811480772",
+        "name": "静安区公共厕所",
+        "sourceRef": "node/4811480772",
+        "distanceMeters": 82
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    },
+    {
+      "rank": 12,
+      "group": "单点好评",
+      "venueId": "venue-shanghai-mixc",
+      "venueName": "上海万象城",
+      "venuePrecision": "in_venue_poi",
+      "venueMatchConfidence": 0.72,
+      "venueSourceRef": "osm:node/6859683085",
+      "nearestPublicToilet": {
+        "id": "osm-node-4172316294",
+        "name": "长宁区公共厕所",
+        "sourceRef": "node/4172316294",
+        "distanceMeters": 1653
+      },
+      "mergeDecision": "keep_separate",
+      "reason": "最近公开厕所仅用于应急参照；没有证据证明它就是商场榜单厕所。"
+    }
+  ]
+}

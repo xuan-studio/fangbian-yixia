@@ -76,6 +76,7 @@ type FilterState = {
 type ImportedRecord = Record<string, unknown>;
 
 const SHANGHAI_CENTER: [number, number] = [121.4737, 31.2304];
+const MAP_VISUAL_THEME: VisualTheme = "light";
 function makeOnlineStyle(theme: VisualTheme): StyleSpecification {
   const tileTheme = theme === "light" ? "light_all" : "dark_all";
   return {
@@ -588,7 +589,7 @@ export function Dashboard() {
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("online");
-  const [visualTheme, setVisualTheme] = useState<VisualTheme>("light");
+  const [visualTheme, setVisualTheme] = useState<VisualTheme>("dark");
   const [mapNotice, setMapNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -833,7 +834,10 @@ export function Dashboard() {
           <section className="premium-panel">
             <div className="section-heading"><span><Star size={15} /> 小红书优质榜</span><span className={`mini-badge ${premiumStatus === "ready" ? "is-ready" : ""}`}>{premiumStatus === "ready" ? "READY" : "PENDING"}</span></div>
             {premiumRecords.length ? (
-              <div className="premium-list">{premiumRecords.slice(0, 3).map((record, index) => <button key={record.id} onClick={() => setSelectedId(record.id)}><span>{index + 1}</span><div><strong>{record.name}</strong><small>{record.district ?? "区域待核实"}</small></div><ChevronRight size={15} /></button>)}</div>
+              <>
+                <div className="premium-match-note"><CircleCheck size={16} /><span><strong>{premiumRecords.length} 个榜单场所已匹配</strong><small>金色柱为商场场所点，具体厕所楼层待核实</small></span></div>
+                <div className="premium-list">{premiumRecords.map((record, index) => <button key={record.id} onClick={() => setSelectedId(record.id)}><span>{index + 1}</span><div><strong>{record.name}</strong><small>{record.district ?? "区域待核实"} · {record.tags[1] ?? "榜单线索"}</small></div><ChevronRight size={15} /></button>)}</div>
+              </>
             ) : (
               <div className="honest-empty"><Radar size={25} /><strong>榜单数据采集中</strong><p>没有帖子正文就不生成厕所，也不伪造评价。后续导入 JSON，金色 3D 柱会自动出现。</p><button onClick={() => fileRef.current?.click()}><Upload size={14} /> 导入真实数据</button></div>
             )}
@@ -849,7 +853,7 @@ export function Dashboard() {
           <div className="map-frame">
             {loading && <div className="map-loading"><Radar size={24} /><span>正在展开上海厕所情报网…</span></div>}
             {loadError && <div className="map-error"><CircleAlert size={20} /><div><strong>数据暂未载入</strong><p>{loadError}</p></div></div>}
-            <ToiletMap records={filteredRecords} boundary={boundary} selectedId={visibleSelectedId} mode={mapMode} theme={visualTheme} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />
+            <ToiletMap records={filteredRecords} boundary={boundary} selectedId={visibleSelectedId} mode={mapMode} theme={MAP_VISUAL_THEME} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />
             <div className="map-scanlines" aria-hidden="true" />
             <div className="map-location"><MapPin size={14} /><span>{locationLabel}</span><button onClick={locateUser} aria-label="获取我的位置" title="获取我的位置"><LocateFixed size={15} /></button></div>
             <button className="panic-button" onClick={toggleEmergency}><Zap size={19} fill="currentColor" /><span><strong>憋不住了</strong><small>启动四级降级找厕</small></span><ChevronRight size={18} /></button>
@@ -936,7 +940,7 @@ export function Dashboard() {
         </div>
       </section>
 
-      <footer className="footer"><span><Toilet size={15} /> 方便一下 · Hackathon Golden Reference</span><span>公开数据 ODbL · 优质榜单待提供 · 医疗模块仅供娱乐</span></footer>
+      <footer className="footer"><span><Toilet size={15} /> 方便一下 · Hackathon Golden Reference</span><span>公开数据 ODbL · 榜单场所已匹配，厕所楼层待核实 · 医疗模块仅供娱乐</span></footer>
 
       {healthOpen && <HealthModal onClose={() => setHealthOpen(false)} onSave={() => setHealthHistory((count) => count + 1)} />}
       {demoOpen && <DemoModal onClose={() => setDemoOpen(false)} />}

@@ -1,6 +1,6 @@
 # 方便一下
 
-上海公共厕所 3D 情报地图的黑客松黄金参考版。没有小红书内容时，公开厕所地图、筛选、详情、四级紧急降级和娱乐型健康观察仍可完整运行；优质榜单保持真实空状态。
+上海公共厕所 3D 情报地图的黑客松黄金参考版。公开厕所地图、筛选、详情、四级紧急降级和娱乐型健康观察可完整运行；当前另有 12 个来自小红书榜单/专题线索并完成场所 POI 匹配的金色榜单点。
 
 交付模式：仅本地运行，不发布到 ChatGPT Sites。
 
@@ -34,7 +34,9 @@ npm test
 - 统一接口：`app/types.ts`。
 - JSON Schema：`public/data/toilet-record.schema.json`。
 - 公开数据：`public/data/public-toilets.json`。
-- 优质榜单：`public/data/premium-toilets.json`，当前为 `pending_source` 和空数组。
+- 优质榜单：`public/data/premium-toilets.json`，当前包含 12 个 `pending_verification` 场所点。
+- 匹配审计：`public/data/premium-matches.json`，保留场所点与最近公开厕所的距离，并明确不自动合并。
+- 重新生成：`npm run build:premium`。
 - 导入空模板：`public/data/premium-import-template.json`。
 - 缺失事实必须使用 `null`；界面显示“待核实”，不能把未知当成“无”。
 

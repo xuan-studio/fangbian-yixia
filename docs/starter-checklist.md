@@ -5,7 +5,7 @@
 - [ ] `npm install` 已完成，依赖锁文件与当前环境一致。
 - [ ] `npm test` 通过。
 - [ ] `public/data/public-toilets.json` 记录数不少于 900，坐标位于上海范围。
-- [ ] `public/data/premium-toilets.json` 为 `pending_source` + 空数组。
+- [ ] `public/data/premium-toilets.json` 包含 12 个待核实榜单场所点，且没有虚构评分。
 - [ ] `public/data/premium-import-template.json` 不含样例厕所。
 - [ ] `app/types.ts` 与 JSON Schema 均已冻结。
 - [ ] 首页首次访问后，断网刷新仍能进入本地概念地图。
