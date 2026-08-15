@@ -1,0 +1,18 @@
+{
+  "name": "方便一下｜上海厕所情报地图",
+  "short_name": "方便一下",
+  "description": "上海公共厕所 3D 情报地图与紧急降级找厕工具",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050a10",
+  "theme_color": "#c8ff3d",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
