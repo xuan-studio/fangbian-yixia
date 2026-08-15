@@ -1443,6 +1443,225 @@ a {
   border-radius: 2px !important;
 }
 
+/* Bright field-guide theme: the default presentation mode for the hackathon. */
+.app-shell.theme-light {
+  --ink: #172321;
+  --muted: #5e6d69;
+  --faint: #84918d;
+  --bg: #f5f0e5;
+  --panel: #fffaf0;
+  --panel-2: #f3eee3;
+  --panel-3: #dfefeb;
+  --line: #d9d1c3;
+  --line-strong: #9db5ae;
+  --lime: #0c9485;
+  --cyan: #087f96;
+  --gold: #d9941f;
+  --orange: #f26b43;
+  --red: #d94d55;
+  color-scheme: light;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 213, 89, 0.2), transparent 28%),
+    var(--bg);
+}
+
+.theme-light .topbar {
+  background: rgba(255, 250, 240, 0.94);
+  border-bottom-color: #d7cdbd;
+  box-shadow: 0 5px 22px rgba(64, 48, 28, 0.08);
+}
+
+.theme-light .brand-mark {
+  background: #ff7354;
+  border-color: #ff9b82;
+  color: #fffdf8;
+  box-shadow: 4px 4px 0 #f4c850;
+}
+
+.theme-light .brand small { color: #7b8884; }
+.theme-light .live-dot {
+  background: #0c9485;
+  box-shadow: 0 0 0 4px rgba(12, 148, 133, 0.11), 0 0 13px rgba(12, 148, 133, 0.32);
+}
+
+.theme-light .status-button,
+.theme-light .header-button {
+  background: #fffdf8;
+  border-color: #d8d0c2;
+  color: #41524e;
+  box-shadow: 0 2px 8px rgba(54, 45, 31, 0.04);
+}
+
+.theme-light .status-button:hover,
+.theme-light .header-button:hover {
+  border-color: #89aaa1;
+  color: #0a6f67;
+}
+
+.theme-light .header-button.is-accent {
+  background: #ffd85a;
+  border-color: #eec240;
+  color: #26312c;
+  box-shadow: 3px 3px 0 #e6a936;
+}
+
+.theme-light .left-rail,
+.theme-light .detail-rail {
+  background: rgba(255, 250, 240, 0.9);
+}
+
+.theme-light .section-heading > span:first-child { color: #24302d; }
+.theme-light .search-field,
+.theme-light .two-fields select,
+.theme-light .health-form-grid select,
+.theme-light .source-tabs button,
+.theme-light .toggle-grid button,
+.theme-light .facility-cell,
+.theme-light .unknown-line,
+.theme-light .source-card,
+.theme-light .comment-form input,
+.theme-light .note-field textarea,
+.theme-light .honest-empty {
+  background: #fffdf8;
+}
+
+.theme-light .search-field input,
+.theme-light .two-fields select,
+.theme-light .health-form-grid select,
+.theme-light .comment-form input,
+.theme-light .note-field textarea { color: #172321; }
+
+.theme-light .search-field input::placeholder,
+.theme-light .comment-form input::placeholder,
+.theme-light .note-field textarea::placeholder { color: #9aa49f; }
+
+.theme-light .source-tabs button.is-active {
+  background: #dff1ed;
+  color: #08796f;
+  box-shadow: inset 0 -2px 0 #0c9485;
+}
+
+.theme-light .toggle-grid button.is-active {
+  border-color: rgba(12, 148, 133, 0.5);
+  background: rgba(12, 148, 133, 0.08);
+  color: #08796f;
+}
+
+.theme-light .data-stat-row { border-bottom-color: #e4ddd1; }
+.theme-light .legend-column.open { background: #ff6848; }
+.theme-light .honest-empty { border-color: #cdbf9f; }
+.theme-light .honest-empty strong { color: #493d27; }
+.theme-light .honest-empty button { border-color: #d2a94c; }
+
+.theme-light .map-stage {
+  background: linear-gradient(145deg, #f4efe3 0%, #ebe5d8 100%);
+}
+
+.theme-light .map-kicker { color: #087f96; }
+.theme-light .map-count strong { color: #f05f3f; }
+.theme-light .map-frame {
+  background: #e9eee9;
+  border-color: #bbb3a5;
+  box-shadow: 0 22px 45px rgba(64, 49, 28, 0.17), 6px 6px 0 rgba(12, 148, 133, 0.13);
+}
+
+.theme-light .map-frame::before { border-color: rgba(8, 127, 150, 0.17); }
+.theme-light .map-frame::after {
+  border-top-color: #f05f3f;
+  border-left-color: #f05f3f;
+}
+.theme-light .map-scanlines::before,
+.theme-light .map-scanlines::after { background: rgba(8, 127, 150, 0.07); }
+
+.theme-light .map-location,
+.theme-light .map-legend,
+.theme-light .map-notice {
+  background: rgba(255, 253, 248, 0.93);
+  border-color: #b6c4bf;
+  color: #3d504b;
+  box-shadow: 0 5px 18px rgba(52, 43, 28, 0.1);
+}
+
+.theme-light .map-location button {
+  background: #e1efec;
+  border-left-color: #b6c4bf;
+  color: #087f96;
+}
+
+.theme-light .panic-button {
+  background: #ff6848;
+  border-color: #ff8b73;
+  color: #fffdf8;
+  box-shadow: 6px 6px 0 rgba(126, 53, 36, 0.78);
+}
+
+.theme-light .panic-button:hover { box-shadow: 8px 8px 0 rgba(126, 53, 36, 0.78); }
+.theme-light .map-attribution { color: rgba(47, 64, 59, 0.62); }
+.theme-light .dot-lime { background: #ff6848; }
+.theme-light .dot-cyan { background: #0092a2; }
+.theme-light .dot-gold { background: #e3a32c; }
+
+.theme-light .emergency-panel {
+  background: rgba(255, 253, 248, 0.98);
+  border-color: #91aaa3;
+  box-shadow: 0 -18px 44px rgba(61, 47, 29, 0.22);
+}
+
+.theme-light .icon-button,
+.theme-light .secondary-button,
+.theme-light .fallback-step {
+  background: #fffaf1;
+  color: #172321;
+}
+
+.theme-light .fallback-step {
+  box-shadow: 0 3px 10px rgba(55, 44, 28, 0.04);
+}
+
+.theme-light .fallback-step p b { color: #08796f; }
+.theme-light .detail-badges span { background: #f7f2e8; }
+.theme-light .facility-cell.is-yes { border-color: rgba(12, 148, 133, 0.32); }
+.theme-light .facility-cell.is-yes strong { color: #08796f; }
+.theme-light .detail-score-strip strong,
+.theme-light .tag-row span,
+.theme-light .facility-icon { color: #087f96; }
+
+.theme-light .primary-button {
+  background: #0c9485;
+  border-color: #0c9485;
+  color: #fff;
+}
+
+.theme-light .comment-form button { color: #08796f; }
+.theme-light .footer {
+  background: #123c39;
+  border-top-color: #0e514c;
+  color: #8db6af;
+}
+.theme-light .footer span:first-child { color: #d5e6e1; }
+
+.theme-light .modal-backdrop { background: rgba(44, 55, 50, 0.54); }
+.theme-light .modal-card {
+  background: #fffaf0;
+  border-color: #9eb6af;
+  box-shadow: 12px 12px 0 rgba(35, 102, 94, 0.23);
+}
+.theme-light .safety-checks label { color: #8e3d42; }
+.theme-light .health-result p { color: #4f615d; }
+
+.theme-light .maplibregl-ctrl-group {
+  background: #fffdf8 !important;
+  border-color: #b7c4c0 !important;
+  box-shadow: 0 4px 12px rgba(58, 48, 31, 0.12) !important;
+}
+.theme-light .maplibregl-ctrl-icon { filter: none; }
+.theme-light .maplibregl-popup-content,
+.theme-light .mapboxgl-popup-content {
+  background: #fffdf8 !important;
+  color: #172321 !important;
+}
+
 @media (max-width: 1260px) {
   .dashboard-grid {
     grid-template-columns: 260px minmax(500px, 1fr) 320px;

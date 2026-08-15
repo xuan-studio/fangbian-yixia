@@ -29,6 +29,7 @@ import {
   LocateFixed,
   MapPin,
   MessageSquare,
+  Moon,
   Navigation,
   Radar,
   Route,
@@ -37,6 +38,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Star,
+  Sun,
   Toilet,
   Upload,
   Wifi,
@@ -58,6 +60,7 @@ type BoundaryData = {
 };
 
 type MapMode = "online" | "offline";
+type VisualTheme = "light" | "dark";
 
 type FilterState = {
   query: string;
@@ -73,55 +76,57 @@ type FilterState = {
 type ImportedRecord = Record<string, unknown>;
 
 const SHANGHAI_CENTER: [number, number] = [121.4737, 31.2304];
-const ONLINE_STYLE: StyleSpecification = {
-  version: 8,
-  name: "方便一下在线深色底图",
-  sources: {
-    "carto-dark": {
-      type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-      ],
-      tileSize: 256,
-      minzoom: 0,
-      maxzoom: 20,
-      attribution: "© OpenStreetMap contributors © CARTO",
-    },
-  },
-  layers: [
-    {
-      id: "online-background",
-      type: "background",
-      paint: { "background-color": "#071019" },
-    },
-    {
-      id: "carto-dark",
-      type: "raster",
-      source: "carto-dark",
-      minzoom: 0,
-      maxzoom: 20,
-      paint: {
-        "raster-opacity": 0.82,
-        "raster-saturation": -0.28,
-        "raster-contrast": 0.12,
+function makeOnlineStyle(theme: VisualTheme): StyleSpecification {
+  const tileTheme = theme === "light" ? "light_all" : "dark_all";
+  return {
+    version: 8,
+    name: `方便一下在线${theme === "light" ? "亮色" : "深色"}底图`,
+    sources: {
+      "carto-base": {
+        type: "raster",
+        tiles: ["a", "b", "c"].map(
+          (subdomain) => `https://${subdomain}.basemaps.cartocdn.com/${tileTheme}/{z}/{x}/{y}@2x.png`,
+        ),
+        tileSize: 256,
+        minzoom: 0,
+        maxzoom: 20,
+        attribution: "© OpenStreetMap contributors © CARTO",
       },
     },
-  ],
-};
-const LOCAL_STYLE: StyleSpecification = {
-  version: 8,
-  name: "方便一下离线底图",
-  sources: {},
-  layers: [
-    {
-      id: "background",
-      type: "background",
-      paint: { "background-color": "#071019" },
-    },
-  ],
-};
+    layers: [
+      {
+        id: "online-background",
+        type: "background",
+        paint: { "background-color": theme === "light" ? "#ebe8de" : "#071019" },
+      },
+      {
+        id: "carto-base",
+        type: "raster",
+        source: "carto-base",
+        minzoom: 0,
+        maxzoom: 20,
+        paint: theme === "light"
+          ? { "raster-opacity": 0.96, "raster-saturation": -0.12, "raster-contrast": 0.04 }
+          : { "raster-opacity": 0.82, "raster-saturation": -0.28, "raster-contrast": 0.12 },
+      },
+    ],
+  };
+}
+
+function makeLocalStyle(theme: VisualTheme): StyleSpecification {
+  return {
+    version: 8,
+    name: "方便一下离线底图",
+    sources: {},
+    layers: [
+      {
+        id: "background",
+        type: "background",
+        paint: { "background-color": theme === "light" ? "#e9efe9" : "#071019" },
+      },
+    ],
+  };
+}
 
 const DISTRICT_ORDER = [
   "黄浦区",
@@ -271,6 +276,7 @@ function makeLayers(
   boundary: BoundaryData | null,
   selectedId: string | null,
   mode: MapMode,
+  theme: VisualTheme,
 ) {
   const selected = records.find((record) => record.id === selectedId);
   const layers = [
@@ -282,32 +288,48 @@ function makeLayers(
           stroked: true,
           extruded: true,
           getElevation: 45,
-          getFillColor: mode === "online" ? [10, 35, 43, 52] : [10, 35, 43, 175],
-          getLineColor: [75, 232, 219, 210],
+          getFillColor: theme === "light"
+            ? mode === "online" ? [243, 237, 220, 22] : [222, 235, 227, 175]
+            : mode === "online" ? [10, 35, 43, 52] : [10, 35, 43, 175],
+          getLineColor: theme === "light" ? [0, 122, 137, 150] : [75, 232, 219, 210],
           getLineWidth: 2,
           lineWidthMinPixels: 1.4,
           pickable: false,
         })
       : null,
+    new ScatterplotLayer<ToiletRecord>({
+      id: "toilet-footprints",
+      data: records,
+      getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude],
+      getRadius: theme === "light" ? 285 : 240,
+      radiusUnits: "meters",
+      getFillColor: (record) => {
+        if (record.sourceType === "premium_xhs") return [245, 168, 36, theme === "light" ? 54 : 34];
+        if (record.open24h === true) return theme === "light" ? [255, 99, 71, 58] : [190, 255, 61, 34];
+        return theme === "light" ? [0, 146, 162, 38] : [66, 221, 238, 28];
+      },
+      stroked: false,
+      filled: true,
+      pickable: false,
+    }),
     new ColumnLayer<ToiletRecord>({
       id: "toilet-columns",
       data: records,
       diskResolution: 6,
-      radius: 175,
+      radius: theme === "light" ? 210 : 175,
       extruded: true,
       elevationScale: 1,
       getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude],
       getElevation: (record) =>
         record.id === selectedId
-          ? 1150
-          : 180 + (record.confidence ?? 0.45) * 640 + (record.rating ?? 0) * 80,
-      getFillColor: (record) =>
-        record.sourceType === "premium_xhs"
-          ? [255, 194, 71, 235]
-          : record.open24h === true
-            ? [190, 255, 61, 220]
-            : [66, 221, 238, 205],
-      getLineColor: [240, 255, 253, 120],
+          ? 1450
+          : 240 + (record.confidence ?? 0.45) * 760 + (record.rating ?? 0) * 90,
+      getFillColor: (record) => {
+        if (record.sourceType === "premium_xhs") return [245, 168, 36, 238];
+        if (record.open24h === true) return theme === "light" ? [255, 99, 71, 238] : [190, 255, 61, 220];
+        return theme === "light" ? [0, 146, 162, 220] : [66, 221, 238, 205];
+      },
+      getLineColor: theme === "light" ? [255, 255, 255, 190] : [240, 255, 253, 120],
       lineWidthMinPixels: 1,
       stroked: true,
       pickable: true,
@@ -344,6 +366,7 @@ function ToiletMap({
   boundary,
   selectedId,
   mode,
+  theme,
   onSelect,
   onOnlineFailure,
 }: {
@@ -351,6 +374,7 @@ function ToiletMap({
   boundary: BoundaryData | null;
   selectedId: string | null;
   mode: MapMode;
+  theme: VisualTheme;
   onSelect: (record: ToiletRecord) => void;
   onOnlineFailure: () => void;
 }) {
@@ -362,7 +386,7 @@ function ToiletMap({
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: mode === "online" ? ONLINE_STYLE : LOCAL_STYLE,
+      style: mode === "online" ? makeOnlineStyle(theme) : makeLocalStyle(theme),
       center: SHANGHAI_CENTER,
       zoom: 9.1,
       minZoom: 7.6,
@@ -420,16 +444,16 @@ function ToiletMap({
       mapRef.current = null;
       map.remove();
     };
-  }, [mode, onOnlineFailure, onSelect]);
+  }, [mode, theme, onOnlineFailure, onSelect]);
 
   useEffect(() => {
     overlayRef.current?.setProps({
-      layers: makeLayers(records, boundary, selectedId, mode),
+      layers: makeLayers(records, boundary, selectedId, mode, theme),
       onClick: (info: PickingInfo<ToiletRecord>) => {
         if (info.object) onSelect(info.object);
       },
     });
-  }, [records, boundary, selectedId, mode, onSelect]);
+  }, [records, boundary, selectedId, mode, theme, onSelect]);
 
   return <div className="map-canvas" ref={containerRef} aria-label="上海公共厕所 3D 地图" />;
 }
@@ -564,6 +588,7 @@ export function Dashboard() {
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("online");
+  const [visualTheme, setVisualTheme] = useState<VisualTheme>("light");
   const [mapNotice, setMapNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -756,7 +781,7 @@ export function Dashboard() {
     : [];
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell theme-${visualTheme}`}>
       <header className="topbar">
         <button className="brand" onClick={() => setFilters(EMPTY_FILTERS)} aria-label="重置并返回全城地图">
           <span className="brand-mark"><Toilet size={23} /></span>
@@ -764,6 +789,9 @@ export function Dashboard() {
         </button>
         <div className="topbar-pulse"><span className="live-dot" /> {loading ? "正在接入城市数据" : `${publicRecords.length} 个公开点已就绪`}</div>
         <nav className="top-actions" aria-label="主要操作">
+          <button className="status-button theme-button" onClick={() => setVisualTheme((current) => current === "light" ? "dark" : "light")} aria-label={`切换为${visualTheme === "light" ? "暗色" : "亮色"}模式`}>
+            {visualTheme === "light" ? <Sun size={15} /> : <Moon size={15} />} {visualTheme === "light" ? "亮色" : "暗色"}
+          </button>
           <button className={`status-button ${mapMode === "offline" ? "is-offline" : ""}`} onClick={() => setMapMode((current) => current === "online" ? "offline" : "online")}>
             {mapMode === "online" ? <Wifi size={15} /> : <WifiOff size={15} />}
             {mapMode === "online" ? "在线底图" : "离线概念图"}
@@ -821,7 +849,7 @@ export function Dashboard() {
           <div className="map-frame">
             {loading && <div className="map-loading"><Radar size={24} /><span>正在展开上海厕所情报网…</span></div>}
             {loadError && <div className="map-error"><CircleAlert size={20} /><div><strong>数据暂未载入</strong><p>{loadError}</p></div></div>}
-            <ToiletMap records={filteredRecords} boundary={boundary} selectedId={visibleSelectedId} mode={mapMode} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />
+            <ToiletMap records={filteredRecords} boundary={boundary} selectedId={visibleSelectedId} mode={mapMode} theme={visualTheme} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />
             <div className="map-scanlines" aria-hidden="true" />
             <div className="map-location"><MapPin size={14} /><span>{locationLabel}</span><button onClick={locateUser} aria-label="获取我的位置" title="获取我的位置"><LocateFixed size={15} /></button></div>
             <button className="panic-button" onClick={toggleEmergency}><Zap size={19} fill="currentColor" /><span><strong>憋不住了</strong><small>启动四级降级找厕</small></span><ChevronRight size={18} /></button>
