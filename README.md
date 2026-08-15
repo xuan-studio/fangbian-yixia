@@ -28,6 +28,7 @@ npm test
 - 纯娱乐排泄观察，便血、黑便、持续腹痛等红旗信号直接提示就医。
 - 商场体验 SaaS、明确标注推广位、自愿匿名研究合作三类商业路径。
 - 小浣熊 JSON 导入器；合法数据导入后，优质榜单与金色 3D 柱自动出现。
+- 评论区楼内定位：提交楼层、方位和行走说明，进入候选池；3 位独立用户确认后才能上线。
 
 ## 数据约定
 
@@ -36,6 +37,7 @@ npm test
 - 公开数据：`public/data/public-toilets.json`。
 - 优质榜单：`public/data/premium-toilets.json`，当前包含 12 个 `pending_verification` 场所点。
 - 评论种子：`public/data/premium-comment-seeds.json`，为每个场所保存一条平台证据观点、一组证据标签和一条明确标注的 Mock 评论。
+- 楼内位置候选：`public/data/building-location-candidates.json`，真实确认与演示确认分开计数；含演示票的结果只能标记“演示上线”。
 - 匹配审计：`public/data/premium-matches.json`，保留场所点与最近公开厕所的距离，并明确不自动合并。
 - 重新生成：`npm run build:premium`。
 - 导入空模板：`public/data/premium-import-template.json`。

@@ -70,3 +70,28 @@ export type PublicDataset = {
   generatedAt: string;
   records: ToiletRecord[];
 };
+
+export type BuildingLocationCandidate = {
+  id: string;
+  toiletId: string;
+  buildingName: string;
+  floor: string;
+  zone: string;
+  directions: string | null;
+  source: "xhs_note" | "xhs_aggregate" | "community";
+  sourceLabel: string;
+  sourceUrl: string | null;
+  sourceCommentId: string | null;
+  status: "collecting" | "published" | "published_demo" | "disputed";
+  communityVerifications: number;
+  demoVerifications: number;
+  rejections: number;
+  requiredVerifications: number;
+  createdAt: string;
+};
+
+export type BuildingLocationDataset = {
+  status: "ready";
+  policy: string;
+  records: BuildingLocationCandidate[];
+};

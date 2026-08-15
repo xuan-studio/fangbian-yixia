@@ -26,10 +26,11 @@ test("server-renders the hackathon dashboard without starter metadata", async ()
 });
 
 test("public and premium datasets preserve truthful status", async () => {
-  const [publicData, premiumData, matchData] = await Promise.all([
+  const [publicData, premiumData, matchData, indoorData] = await Promise.all([
     readFile(new URL("public/data/public-toilets.json", root), "utf8").then(JSON.parse),
     readFile(new URL("public/data/premium-toilets.json", root), "utf8").then(JSON.parse),
     readFile(new URL("public/data/premium-matches.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/building-location-candidates.json", root), "utf8").then(JSON.parse),
   ]);
   assert.ok(publicData.records.length >= 900);
   assert.equal(premiumData.status, "ready");
@@ -42,6 +43,10 @@ test("public and premium datasets preserve truthful status", async () => {
   assert.ok(premiumData.records.every((record) => record.comments.some((comment) => comment.source === "xhs_note" || comment.source === "xhs_aggregate")));
   assert.ok(premiumData.records.every((record) => record.comments.some((comment) => comment.source === "mock" && comment.sourceLabel === "Mock 演示")));
   assert.ok(matchData.records.every((record) => record.mergeDecision === "keep_separate"));
+  assert.equal(indoorData.status, "ready");
+  assert.ok(indoorData.records.length >= 1);
+  assert.ok(indoorData.records.every((record) => record.requiredVerifications === 3));
+  assert.ok(indoorData.records.every((record) => record.status === "collecting"));
   for (const record of publicData.records) {
     assert.equal(record.sourceType, "public_open_data");
     assert.ok(record.coordinates.longitude >= 120.8 && record.coordinates.longitude <= 122.15);
@@ -61,11 +66,14 @@ test("offline and import contracts are packaged", async () => {
   ]);
   assert.match(serviceWorker, /public-toilets\.json/);
   assert.match(serviceWorker, /premium-comment-seeds\.json/);
+  assert.match(serviceWorker, /building-location-candidates\.json/);
   assert.match(serviceWorker, /shanghai-boundary\.geojson/);
   assert.match(schema, /"title": "ToiletRecord"/);
   assert.match(template, /"records": \[\]/);
   assert.match(dashboard, /憋不住了/);
   assert.match(dashboard, /未知 ≠ 没有/);
+  assert.match(dashboard, /3 人确认后上线/);
+  assert.match(dashboard, /模拟下一位用户确认/);
   assert.match(dashboard, /interleaved: false/);
   assert.match(dashboard, /"light_all" : "dark_all"/);
   assert.match(dashboard, /MAP_VISUAL_THEME: VisualTheme = "light"/);

@@ -47,6 +47,8 @@ import {
   Zap,
 } from "lucide-react";
 import type {
+  BuildingLocationCandidate,
+  BuildingLocationDataset,
   CommentRecord,
   PremiumDataset,
   PublicDataset,
@@ -164,7 +166,7 @@ const DEMO_STEPS = [
   ["00:25", "看全城", "展示 941 个公开厕所点与离线 3D 上海轮廓。"],
   ["00:55", "找对厕所", "切换 24 小时、蹲厕、无障碍等筛选，未知字段不冒充已确认。"],
   ["01:25", "憋不住了", "启动四级降级：严选命中 → 放宽设施 → 最近公开点 → 人工求助。"],
-  ["02:05", "数据飞轮", "小浣熊把帖子正文或截图结构化，合法 JSON 导入后金色 3D 柱自动出现。"],
+  ["02:05", "数据飞轮", "评论提交楼层和方向，3 人确认后上线；小浣熊继续结构化帖子证据。"],
   ["02:35", "商业闭环", "商场体验 SaaS、明确标注的推广位、经同意的匿名研究合作。"],
 ] as const;
 
@@ -281,6 +283,20 @@ function commentSourceLabel(comment: CommentRecord) {
   if (comment.source === "mock") return "Mock 演示";
   if (comment.source === "session") return "现场补充";
   return "用户导入";
+}
+
+function withConsensusStatus(candidate: BuildingLocationCandidate): BuildingLocationCandidate {
+  const confirmations = candidate.communityVerifications + candidate.demoVerifications;
+  if (candidate.rejections >= 2 && candidate.rejections >= confirmations) {
+    return { ...candidate, status: "disputed" };
+  }
+  if (confirmations >= candidate.requiredVerifications) {
+    return {
+      ...candidate,
+      status: candidate.demoVerifications > 0 ? "published_demo" : "published",
+    };
+  }
+  return { ...candidate, status: "collecting" };
 }
 
 function makeLayers(
@@ -612,6 +628,12 @@ export function Dashboard() {
   const [locationLabel, setLocationLabel] = useState("人民广场演示点");
   const [sessionComments, setSessionComments] = useState<Record<string, CommentRecord[]>>({});
   const [commentDraft, setCommentDraft] = useState("");
+  const [locationCandidates, setLocationCandidates] = useState<BuildingLocationCandidate[]>([]);
+  const [candidateVotes, setCandidateVotes] = useState<Record<string, "confirm" | "reject">>({});
+  const [locationFormOpen, setLocationFormOpen] = useState(false);
+  const [locationFloor, setLocationFloor] = useState("");
+  const [locationZone, setLocationZone] = useState("");
+  const [locationDirections, setLocationDirections] = useState("");
   const [importNotice, setImportNotice] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -630,14 +652,19 @@ export function Dashboard() {
         if (!response.ok) throw new Error("离线地图读取失败");
         return response.json() as Promise<BoundaryData>;
       }),
+      fetch("/data/building-location-candidates.json").then((response) => {
+        if (!response.ok) throw new Error("楼内位置候选读取失败");
+        return response.json() as Promise<BuildingLocationDataset>;
+      }),
     ])
-      .then(([publicData, premiumData, boundaryData]) => {
+      .then(([publicData, premiumData, boundaryData, locationData]) => {
         if (!active) return;
         setPublicRecords(publicData.records);
         setPremiumRecords(premiumData.records);
         setPremiumStatus(premiumData.status);
         setPublicMeta(publicData);
         setBoundary(boundaryData);
+        setLocationCandidates(locationData.records.map(withConsensusStatus));
         setSelectedId(publicData.records[0]?.id ?? null);
       })
       .catch((error: unknown) => {
@@ -795,6 +822,82 @@ export function Dashboard() {
     : [];
   const evidenceCommentCount = comments.filter((comment) => comment.source === "xhs_note" || comment.source === "xhs_aggregate").length;
   const mockCommentCount = comments.filter((comment) => comment.source === "mock").length;
+  const selectedLocationCandidates = selected
+    ? locationCandidates.filter((candidate) => candidate.toiletId === selected.id)
+    : [];
+  const publishedIndoorLocation = selectedLocationCandidates.find(
+    (candidate) => candidate.status === "published" || candidate.status === "published_demo",
+  ) ?? null;
+
+  const submitIndoorLocation = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selected || !locationFloor.trim() || !locationZone.trim()) return;
+    const candidateId = `indoor-session-${Date.now()}`;
+    const floor = locationFloor.trim();
+    const zone = locationZone.trim();
+    const directions = locationDirections.trim() || null;
+    const comment: CommentRecord = {
+      id: `session-location-${Date.now()}`,
+      author: "本次演示",
+      content: `楼内位置投稿：${floor} · ${zone}${directions ? ` · ${directions}` : ""}`,
+      createdAt: "刚刚",
+      source: "session",
+      sourceLabel: "位置投稿 · 待验证",
+      sourceUrl: null,
+    };
+    const candidate: BuildingLocationCandidate = {
+      id: candidateId,
+      toiletId: selected.id,
+      buildingName: selected.name.replace(" · 榜单厕所", ""),
+      floor,
+      zone,
+      directions,
+      source: "community",
+      sourceLabel: "评论区结构化投稿",
+      sourceUrl: null,
+      sourceCommentId: comment.id,
+      status: "collecting",
+      communityVerifications: 0,
+      demoVerifications: 0,
+      rejections: 0,
+      requiredVerifications: 3,
+      createdAt: "刚刚",
+    };
+    setSessionComments((current) => ({
+      ...current,
+      [selected.id]: [...(current[selected.id] ?? []), comment],
+    }));
+    setLocationCandidates((current) => [...current, candidate]);
+    setLocationFloor("");
+    setLocationZone("");
+    setLocationDirections("");
+    setLocationFormOpen(false);
+  };
+
+  const voteOnLocation = (candidateId: string, vote: "confirm" | "reject") => {
+    if (candidateVotes[candidateId]) return;
+    setCandidateVotes((current) => ({ ...current, [candidateId]: vote }));
+    setLocationCandidates((current) => current.map((candidate) => {
+      if (candidate.id !== candidateId) return candidate;
+      return withConsensusStatus({
+        ...candidate,
+        communityVerifications: candidate.communityVerifications + (vote === "confirm" ? 1 : 0),
+        rejections: candidate.rejections + (vote === "reject" ? 1 : 0),
+      });
+    }));
+  };
+
+  const simulateNextVerifier = (candidateId: string) => {
+    setLocationCandidates((current) => current.map((candidate) => {
+      if (candidate.id !== candidateId) return candidate;
+      const total = candidate.communityVerifications + candidate.demoVerifications;
+      if (total >= candidate.requiredVerifications) return candidate;
+      return withConsensusStatus({
+        ...candidate,
+        demoVerifications: candidate.demoVerifications + 1,
+      });
+    }));
+  };
 
   return (
     <div className={`app-shell theme-${visualTheme}`}>
@@ -901,6 +1004,7 @@ export function Dashboard() {
                 <h2>{selected.name}</h2>
                 <p><MapPin size={14} /> {selected.address ?? `${selected.district ?? "区域"} · 具体地址待核实`}</p>
                 <div className="detail-badges"><span className={selected.open24h === true ? "is-open" : ""}><Clock3 size={13} /> {selected.open24h === true ? "24 小时" : selected.openingHours ?? "时间待核实"}</span><span><ShieldCheck size={13} /> 可信度 {selected.confidence === null ? "待核实" : `${Math.round(selected.confidence * 100)}%`}</span></div>
+                {publishedIndoorLocation ? <div className={`published-indoor-location status-${publishedIndoorLocation.status}`}><Layers3 size={15} /><div><span>{publishedIndoorLocation.status === "published_demo" ? "演示上线位置" : "社区已上线位置"}</span><strong>{publishedIndoorLocation.floor} · {publishedIndoorLocation.zone}</strong></div></div> : null}
               </div>
 
               <div className="detail-score-strip">
@@ -930,8 +1034,36 @@ export function Dashboard() {
                 <div className="source-card"><div><strong>{selected.sourceName}</strong><p>{selected.sourceRef ?? "来源编号待核实"}</p></div>{selected.sourceUrl ? <a href={selected.sourceUrl} target="_blank" rel="noreferrer" aria-label="打开数据来源" title="打开数据来源"><ChevronRight size={16} /></a> : <span className="disabled-link"><ChevronRight size={16} /></span>}</div>
               </section>
 
+              <section className="detail-section indoor-consensus-section">
+                <div className="section-heading"><span><Layers3 size={15} /> 楼内定位共识</span><small>3 人确认后上线</small></div>
+                {selectedLocationCandidates.length ? <div className="indoor-candidate-list">{selectedLocationCandidates.map((candidate) => {
+                  const totalVerifications = candidate.communityVerifications + candidate.demoVerifications;
+                  const isPublished = candidate.status === "published" || candidate.status === "published_demo";
+                  const userVote = candidateVotes[candidate.id];
+                  return <article key={candidate.id} className={`indoor-candidate status-${candidate.status}`}>
+                    <div className="indoor-candidate-head"><div><strong>{candidate.floor} · {candidate.zone}</strong><small>{candidate.sourceLabel}</small></div><span>{candidate.status === "published" ? "已上线" : candidate.status === "published_demo" ? "演示上线" : candidate.status === "disputed" ? "有争议" : "待验证"}</span></div>
+                    {candidate.directions ? <p>{candidate.directions}</p> : null}
+                    <div className="consensus-meter" aria-label={`确认进度 ${totalVerifications}/${candidate.requiredVerifications}`}>{Array.from({ length: candidate.requiredVerifications }, (_, index) => <i key={index} className={index < totalVerifications ? "is-filled" : ""} />)}</div>
+                    <div className="consensus-count"><span>{totalVerifications}/{candidate.requiredVerifications} 确认</span><span>真实 {candidate.communityVerifications} · 演示 {candidate.demoVerifications} · 反对 {candidate.rejections}</span></div>
+                    <div className="consensus-actions">
+                      <button type="button" disabled={Boolean(userVote) || isPublished} onClick={() => voteOnLocation(candidate.id, "confirm")}><Check size={13} /> {userVote === "confirm" ? "已确认" : "我确认到过"}</button>
+                      <button type="button" disabled={Boolean(userVote) || isPublished} onClick={() => voteOnLocation(candidate.id, "reject")}><X size={13} /> {userVote === "reject" ? "已反馈" : "位置不对"}</button>
+                    </div>
+                    {!isPublished ? <button type="button" className="demo-verifier-button" onClick={() => simulateNextVerifier(candidate.id)}>模拟下一位用户确认</button> : null}
+                    {candidate.sourceUrl ? <a className="candidate-source-link" href={candidate.sourceUrl} target="_blank" rel="noreferrer">查看候选来源</a> : null}
+                  </article>;
+                })}</div> : <p className="empty-copy">还没有楼内位置候选，请从评论区提交楼层和方向。</p>}
+              </section>
+
               <section className="detail-section comments-section">
                 <div className="section-heading"><span><MessageSquare size={15} /> 用户声音</span><small>{evidenceCommentCount} 条平台证据 · {mockCommentCount} 条 Mock</small></div>
+                <div className="location-submit-row"><span>知道具体在哪一层？</span><button type="button" onClick={() => setLocationFormOpen((current) => !current)}><MapPin size={13} /> 提交楼内位置</button></div>
+                {locationFormOpen ? <form className="indoor-location-form" onSubmit={submitIndoorLocation}>
+                  <div><input value={locationFloor} onChange={(event) => setLocationFloor(event.target.value)} placeholder="楼层，如 B1 / 5F" required /><input value={locationZone} onChange={(event) => setLocationZone(event.target.value)} placeholder="方位，如东南侧 / 近 2 号电梯" required /></div>
+                  <input value={locationDirections} onChange={(event) => setLocationDirections(event.target.value)} placeholder="怎么走？可选填" />
+                  <p>投稿会先进入候选区，不会直接改写正式位置。</p>
+                  <div><button type="button" onClick={() => setLocationFormOpen(false)}>取消</button><button type="submit">提交候选</button></div>
+                </form> : null}
                 {comments.length ? <div className="comment-list">{comments.slice(-4).map((comment) => <div key={comment.id} className={`comment-item source-${comment.source}`}><div className="comment-author"><strong>{comment.author}</strong><span>{commentSourceLabel(comment)}</span></div><p>{comment.content}</p><div className="comment-meta"><small>{comment.createdAt}</small>{comment.sourceUrl ? <a href={comment.sourceUrl} target="_blank" rel="noreferrer">查看来源</a> : null}</div></div>)}</div> : <p className="empty-copy">还没有可信点评。第一条也要诚实。</p>}
                 <form className="comment-form" onSubmit={addComment}><input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="补充气味、清洁或排队情况" /><button aria-label="提交点评" title="提交点评"><ChevronRight size={16} /></button></form>
               </section>
