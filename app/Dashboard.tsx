@@ -73,7 +73,43 @@ type FilterState = {
 type ImportedRecord = Record<string, unknown>;
 
 const SHANGHAI_CENTER: [number, number] = [121.4737, 31.2304];
-const ONLINE_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+const ONLINE_STYLE: StyleSpecification = {
+  version: 8,
+  name: "方便一下在线深色底图",
+  sources: {
+    "carto-dark": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      minzoom: 0,
+      maxzoom: 20,
+      attribution: "© OpenStreetMap contributors © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "online-background",
+      type: "background",
+      paint: { "background-color": "#071019" },
+    },
+    {
+      id: "carto-dark",
+      type: "raster",
+      source: "carto-dark",
+      minzoom: 0,
+      maxzoom: 20,
+      paint: {
+        "raster-opacity": 0.82,
+        "raster-saturation": -0.28,
+        "raster-contrast": 0.12,
+      },
+    },
+  ],
+};
 const LOCAL_STYLE: StyleSpecification = {
   version: 8,
   name: "方便一下离线底图",
@@ -234,6 +270,7 @@ function makeLayers(
   records: ToiletRecord[],
   boundary: BoundaryData | null,
   selectedId: string | null,
+  mode: MapMode,
 ) {
   const selected = records.find((record) => record.id === selectedId);
   const layers = [
@@ -245,7 +282,7 @@ function makeLayers(
           stroked: true,
           extruded: true,
           getElevation: 45,
-          getFillColor: [10, 35, 43, 175],
+          getFillColor: mode === "online" ? [10, 35, 43, 52] : [10, 35, 43, 175],
           getLineColor: [75, 232, 219, 210],
           getLineWidth: 2,
           lineWidthMinPixels: 1.4,
@@ -373,10 +410,9 @@ function ToiletMap({
         onOnlineFailure();
       }
     };
-    map.on("error", failOnline);
     const styleTimer = window.setTimeout(() => {
-      if (mode === "online" && !map.isStyleLoaded()) failOnline();
-    }, 7000);
+      if (mode === "online" && (!map.isStyleLoaded() || !map.areTilesLoaded())) failOnline();
+    }, 9000);
 
     return () => {
       window.clearTimeout(styleTimer);
@@ -388,7 +424,7 @@ function ToiletMap({
 
   useEffect(() => {
     overlayRef.current?.setProps({
-      layers: makeLayers(records, boundary, selectedId),
+      layers: makeLayers(records, boundary, selectedId, mode),
       onClick: (info: PickingInfo<ToiletRecord>) => {
         if (info.object) onSelect(info.object);
       },
