@@ -141,6 +141,10 @@ test("mobile layout exposes every primary action without horizontal discovery", 
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => document.querySelector(".map-count strong")?.textContent?.trim() === "953");
 
+  const mainSiteLink = page.getByRole("link", { name: "返回 w3xuan.xyz 主站" });
+  assert.equal(await mainSiteLink.isVisible(), true, "手机首屏应提供返回主站入口");
+  assert.equal(await mainSiteLink.getAttribute("href"), "https://w3xuan.xyz");
+
   for (const label of ["切换为亮色模式", "在线底图", "我要共建", /验证中心 1/, "导入榜单 JSON", "3 分钟演示"]) {
     assert.equal(await page.getByRole("button", { name: label, exact: typeof label === "string" }).isVisible(), true, `${String(label)} 应在手机顶部直接可见`);
   }

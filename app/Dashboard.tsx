@@ -26,6 +26,7 @@ import {
   Gauge,
   HeartPulse,
   History,
+  House,
   Layers3,
   ListChecks,
   LocateFixed,
@@ -1259,6 +1260,9 @@ export function Dashboard() {
           <span><strong>方便一下</strong><small>SHANGHAI RELIEF MAP</small></span>
         </button>
         <div className="topbar-pulse"><span className="live-dot" /> {loading ? "正在接入城市数据" : `${publicRecords.length} 个公开点已就绪`}</div>
+        <a className="main-site-link" href="https://w3xuan.xyz" aria-label="返回 w3xuan.xyz 主站">
+          <House size={15} /> 返回主站
+        </a>
         <nav className="top-actions" aria-label="主要操作">
           <button className="status-button theme-button" onClick={() => setVisualTheme((current) => current === "light" ? "dark" : "light")} aria-label={`切换为${visualTheme === "light" ? "暗色" : "亮色"}模式`}>
             {visualTheme === "light" ? <Sun size={15} /> : <Moon size={15} />} {visualTheme === "light" ? "亮色" : "暗色"}
