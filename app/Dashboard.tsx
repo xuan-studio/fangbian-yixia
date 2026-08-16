@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GeoJsonLayer, IconLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import { GeoJsonLayer, IconLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import type { PickingInfo } from "@deck.gl/core";
 import * as maplibregl from "maplibre-gl";
@@ -383,6 +383,16 @@ function markerSizeForZoom(zoom: number) {
   return 16 + Math.pow(progress, 0.72) * 10;
 }
 
+function clusterIconDataUri(cluster: ToiletClusterDatum, theme: VisualTheme) {
+  const fill = theme === "light" ? "#007e8e" : "#16b8c7";
+  const stroke = cluster.open24hCount > 0
+    ? theme === "light" ? "#ff6848" : "#c8ff3d"
+    : "#ffffff";
+  const fontSize = cluster.count >= 100 ? 19 : cluster.count >= 10 ? 22 : 25;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="36" r="31" fill="${fill}" stroke="${stroke}" stroke-width="5"/><text x="36" y="37" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="${fontSize}" font-weight="700">${cluster.countLabel}</text></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 function makeLayers(
   records: ToiletRecord[],
   clusters: ToiletClusterDatum[],
@@ -411,40 +421,26 @@ function makeLayers(
           pickable: false,
         })
       : null,
-    new ScatterplotLayer<ToiletClusterDatum>({
+    new IconLayer<ToiletClusterDatum>({
       id: "toilet-clusters",
       data: clusters,
       getPosition: (cluster) => [...cluster.coordinates, MARKER_SURFACE_ALTITUDE],
-      getRadius: (cluster) => 17 + Math.min(12, Math.log2(cluster.count) * 2.1),
-      radiusUnits: "pixels",
-      radiusMinPixels: 18,
-      radiusMaxPixels: 30,
-      getFillColor: theme === "light" ? [0, 126, 142, 238] : [22, 184, 199, 235],
-      getLineColor: (cluster) => cluster.open24hCount > 0
-        ? theme === "light" ? [255, 104, 72, 255] : [200, 255, 61, 255]
-        : [255, 255, 255, 220],
-      getLineWidth: 3,
-      lineWidthUnits: "pixels",
-      stroked: true,
-      filled: true,
+      getIcon: (cluster) => ({
+        url: clusterIconDataUri(cluster, theme),
+        width: 72,
+        height: 72,
+        anchorX: 36,
+        anchorY: 72,
+      }),
+      getSize: (cluster) => 39 + Math.min(15, Math.log2(cluster.count) * 2.2),
+      sizeUnits: "pixels",
+      sizeMinPixels: 40,
+      sizeMaxPixels: 56,
+      billboard: true,
+      alphaCutoff: 0.05,
       pickable: true,
       autoHighlight: true,
-      highlightColor: [255, 255, 255, 65],
-    }),
-    new TextLayer<ToiletClusterDatum>({
-      id: "toilet-cluster-counts",
-      data: clusters,
-      getPosition: (cluster) => [...cluster.coordinates, MARKER_SURFACE_ALTITUDE + 1],
-      getText: (cluster) => cluster.countLabel,
-      getSize: (cluster) => cluster.count >= 100 ? 11 : 13,
-      sizeUnits: "pixels",
-      getColor: [255, 255, 255, 255],
-      getTextAnchor: "middle",
-      getAlignmentBaseline: "center",
-      fontFamily: "SFMono-Regular, PingFang SC, sans-serif",
-      fontWeight: 700,
-      billboard: true,
-      pickable: false,
+      highlightColor: [255, 255, 255, 55],
     }),
     new IconLayer<ToiletRecord>({
       id: "toilet-location-pins",
@@ -474,7 +470,7 @@ function makeLayers(
       highlightColor: [255, 255, 255, 90],
     }),
   ];
-  return layers.filter(Boolean) as Array<GeoJsonLayer | ScatterplotLayer<ToiletClusterDatum> | TextLayer<ToiletClusterDatum> | IconLayer<ToiletRecord>>;
+  return layers.filter(Boolean) as Array<GeoJsonLayer | IconLayer<ToiletClusterDatum> | IconLayer<ToiletRecord>>;
 }
 
 function ToiletMap({

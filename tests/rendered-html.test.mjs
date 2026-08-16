@@ -103,6 +103,7 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.doesNotMatch(dashboard, /toilet-marker-glow|selected-halo/);
   assert.match(dashboard, /new Supercluster/);
   assert.match(dashboard, /id: "toilet-clusters"/);
+  assert.match(dashboard, /function clusterIconDataUri/);
   assert.match(dashboard, /getClusterExpansionZoom/);
   assert.match(dashboard, /maxZoom: 12/);
   assert.match(dashboard, /function markerSizeForZoom/);
