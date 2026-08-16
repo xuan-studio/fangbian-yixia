@@ -1448,7 +1448,11 @@ export function Dashboard() {
         </div>
       </section>
 
-      <footer className="footer"><span><Toilet size={15} /> 方便一下 · Hackathon Golden Reference</span><span>公开数据 ODbL · 榜单场所已匹配，厕所楼层待核实 · 医疗模块仅供娱乐</span></footer>
+      <footer className="footer">
+        <span className="footer-brand"><Toilet size={15} /> 方便一下 · Open-source Hackathon Project</span>
+        <span className="footer-meta">公开数据 ODbL · 榜单场所已匹配，厕所楼层待核实 · 医疗模块仅供娱乐</span>
+        <a className="footer-pitch-link" href="/slides/" target="_blank" rel="noreferrer"><Sparkles size={14} /> 查看项目路演</a>
+      </footer>
 
       {healthOpen && <HealthModal onClose={() => setHealthOpen(false)} onSave={() => setHealthHistory((count) => count + 1)} />}
       {demoOpen && <DemoModal onClose={() => setDemoOpen(false)} />}

@@ -1,17 +1,54 @@
-# 方便一下
+# 方便一下 · Shanghai Relief Map
 
-上海公共厕所 3D 情报地图的黑客松黄金参考版。公开厕所地图、筛选、详情、四级紧急降级和娱乐型健康观察可完整运行；当前另有 12 个来自小红书榜单/专题线索并完成场所 POI 匹配的金色榜单点。
+> 上海不是没有厕所，而是缺一张理解“现在就要方便一下”的地图。
 
-交付模式：仅本地运行，不发布到 ChatGPT Sites。
+[![CI](https://github.com/xuan-studio/fangbian-yixia/actions/workflows/ci.yml/badge.svg)](https://github.com/xuan-studio/fangbian-yixia/actions/workflows/ci.yml)
+[![MIT License](https://img.shields.io/badge/code-MIT-c8ff3d.svg)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/live-demo-20c7b5.svg)](https://fangbian-yixia-shanghai.xuan13ie.chatgpt.site/)
 
-## 运行
+「方便一下」是一个 AI 结构化、社区多人验证驱动的上海厕所 3D 情报地图。公开地图告诉你“在哪里”，榜单线索告诉你“好不好”，用户现场反馈告诉你“现在能不能用”。真正着急时，系统会通过四级降级持续给出下一步，而不是假装数据永远完整。
 
-推荐使用 Node.js 22.13+ LTS 或 Node.js 24；当前 Node 23 也能运行，但部分开发工具会显示版本兼容警告。
+*Fangbian Yixia is an AI-assisted, community-verified 3D restroom intelligence map for Shanghai. It combines open map data, curated venue clues, structured user feedback, and an emergency fallback flow.*
+
+## 在线体验
+
+- [打开产品](https://fangbian-yixia-shanghai.xuan13ie.chatgpt.site/)
+- [查看 15 页交互路演](https://fangbian-yixia-shanghai.xuan13ie.chatgpt.site/slides/)
+
+[![方便一下路演动画预览](public/slides/preview.gif)](https://fangbian-yixia-shanghai.xuan13ie.chatgpt.site/slides/)
+
+## 为什么不是普通厕所点评榜
+
+- **941 个公开厕所点**：OpenStreetMap 上海数据，本地缓存并保留 ODbL 署名。
+- **12 个优质场所线索**：平台证据、Mock 演示评论与用户评论分层，不生成无来源评分。
+- **3D 城市地图**：MapLibre + deck.gl；在线底图失败时自动降级为离线概念地图。
+- **四级紧急找厕**：从可信近厕逐步放宽条件，最后提供线下求助方案。
+- **社区共建闭环**：评论由 AI 提取楼层、方位、设施和状态，经过 3 位独立用户确认后上线。
+- **可信度分层**：体验评分、数据可信度和信息新鲜度独立展示。
+- **娱乐型健康观察**：仅做趋势观察；便血、黑便、持续腹痛等红旗信号直接提示就医。
+
+## 让 AI 帮你在电脑上运行
+
+把下面这段话发给 Codex、Claude Code、Cursor 或其他可操作终端的 AI：
+
+```text
+请克隆 https://github.com/xuan-studio/fangbian-yixia.git，完整阅读仓库根目录的 AGENTS.md 和 AI-DEPLOY.md。检查 Node.js 版本后安装依赖，运行 lint 与测试，再启动本地开发服务。不要虚构厕所数据，不要把 Mock 评论当成真实证据，也不要把健康观察描述成医疗诊断。最后告诉我本地访问网址和测试结果。
+```
+
+完整步骤、Windows 命令、常见问题与 AI 安全边界见：[AI-DEPLOY.md](AI-DEPLOY.md)。
+
+## 手动本地运行
+
+需要 Node.js `22.13+ LTS` 或 Node.js 24，以及 npm。
 
 ```bash
-npm install
+git clone https://github.com/xuan-studio/fangbian-yixia.git
+cd fangbian-yixia
+npm ci
 npm run dev
 ```
+
+打开 `http://localhost:3000/`。首次启动不需要账号、数据库或 API Key。
 
 验收：
 
@@ -20,44 +57,37 @@ npm run lint
 npm test
 ```
 
-`npm test` 会完成生产构建、3 项数据/离线契约测试和 3 项真实浏览器流程测试，覆盖地图、筛选、评论、共建、四级紧急推荐、移动端入口及断网刷新。
+`npm test` 会执行生产构建、3 项数据/离线契约测试和 3 项真实浏览器流程测试，覆盖地图、筛选、评论、共建、紧急降级、移动端和断网刷新。
 
-## 已实现
+## 数据与 AI 约定
 
-- 941 个 OpenStreetMap 上海公共厕所点，本地 JSON 缓存，ODbL 署名。
-- deck.gl 3D 数据柱、上海离线概念轮廓、在线底图失败自动降级。
-- 区域、开放信息、蹲厕、坐厕、无障碍、第三卫生间与来源筛选。
-- 厕所详情、来源可信度、会话点评与拥挤数据真实空状态。
-- “憋不住了”四级降级找厕。
-- 纯娱乐排泄观察，便血、黑便、持续腹痛等红旗信号直接提示就医。
-- 商场体验 SaaS、明确标注推广位、自愿匿名研究合作三类商业路径。
-- 小浣熊 JSON 导入器；合法数据导入后，优质榜单与金色 3D 柱自动出现。
-- 评论区楼内定位：提交楼层、方位和行走说明，进入候选池；3 位独立用户确认后才能上线。
-- P0 共建中心：六维厕所打分、自然语言事实补充、状态报告、新厕所入库、验证任务和版本历史。
-- 体验评分、数据可信度、信息新鲜度分开显示，避免一条评论直接改变事实可信度。
-- 390px 手机宽度下六个主入口无需横向滑动即可发现。
+- 统一厕所接口：[app/types.ts](app/types.ts)。
+- JSON Schema：[public/data/toilet-record.schema.json](public/data/toilet-record.schema.json)。
+- 缺失事实必须使用 `null`，界面显示“待核实”；未知不能写成“没有”。
+- 平台证据、Mock 评论和现场评论必须保留来源类型。
+- 新厕所和楼内位置先进入候选池；未验证内容不得进入正式紧急推荐。
+- 推广内容不得改变紧急模式的距离、开放状态和可用性排序。
+- 不提交 Cookie、Token、个人定位或个体健康记录。
 
-## 数据约定
+## 项目结构
 
-- 统一接口：`app/types.ts`。
-- JSON Schema：`public/data/toilet-record.schema.json`。
-- 公开数据：`public/data/public-toilets.json`。
-- 优质榜单：`public/data/premium-toilets.json`，当前包含 12 个 `pending_verification` 场所点。
-- 评论种子：`public/data/premium-comment-seeds.json`，为每个场所保存一条平台证据观点、一组证据标签和一条明确标注的 Mock 评论。
-- 楼内位置候选：`public/data/building-location-candidates.json`，真实确认与演示确认分开计数；含演示票的结果只能标记“演示上线”。
-- 匹配审计：`public/data/premium-matches.json`，保留场所点与最近公开厕所的距离，并明确不自动合并。
-- 重新生成：`npm run build:premium`。
-- 导入空模板：`public/data/premium-import-template.json`。
-- 缺失事实必须使用 `null`；界面显示“待核实”，不能把未知当成“无”。
+| 路径 | 用途 |
+| --- | --- |
+| `app/Dashboard.tsx` | 地图、筛选、紧急推荐、评论、健康与共建中心 |
+| `app/types.ts` | 数据契约和社区验证类型 |
+| `public/data/` | 离线优先的公开点、榜单和候选数据 |
+| `public/slides/` | 可在线或离线打开的路演分享版 |
+| `slides/` | 路演可编辑源文件与图片资产 |
+| `tests/` | 数据契约、浏览器流程、移动端和离线回归 |
+| `docs/` | 项目介绍、60 分钟复演、QA 与办公小浣熊提示词 |
 
-公开数据来自 OpenStreetMap 社区记录，不能替代现场确认。系统不提供实时排队、精确路线或医疗诊断。
+更多背景见：[项目完整介绍](docs/project-introduction.md) · [60 分钟复演](docs/60-minute-replay.md) · [贡献指南](CONTRIBUTING.md)。
 
-## 黑客松复演
+## 许可与来源
 
-- [项目完整介绍与当前状态](docs/project-introduction.md)
-- [办公小浣熊编号提示词](docs/office-raccoon-prompts.md)
-- [60 分钟复演脚本](docs/60-minute-replay.md)
-- [Starter 交付检查单](docs/starter-checklist.md)
-- [15 页路演分享版](slides/fangbian-yixia-pitch-share.html)：图片和字体均已内嵌，单文件可离线打开。
+- 项目原创代码使用 [MIT License](LICENSE)。
+- OpenStreetMap 数据与其衍生数据库遵循 [ODbL](https://www.openstreetmap.org/copyright)，页面继续保留贡献者署名。
+- 小红书等第三方平台的名称、链接、短摘录和图片仍属于各自权利人；MIT License 不覆盖第三方内容。
+- 当前产品是黑客松原型，不提供实时排队、精确路线或医疗诊断。
 
-比赛前把整个目录压缩为 Starter；现场只用办公小浣熊按编号提示词推进，不临时改变数据接口或视觉方向。
+欢迎提交 Issue 或 Pull Request。每一次可信贡献，都可能帮助下一位着急的人。

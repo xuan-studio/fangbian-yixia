@@ -39,3 +39,8 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+
+# local research and generated slide workspaces
+/research/
+/2026-08-15-19fe7ccf/
+/.preview-frames/

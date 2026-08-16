@@ -170,6 +170,10 @@ test("mobile layout exposes every primary action without horizontal discovery", 
   });
   assert.ok(emergencyMetrics.top >= 0 && emergencyMetrics.left >= 0 && emergencyMetrics.right <= emergencyMetrics.width && emergencyMetrics.bottom <= emergencyMetrics.height, `手机紧急面板超出可视区：${JSON.stringify(emergencyMetrics)}`);
   await page.locator(".emergency-panel").getByRole("button", { name: "关闭" }).click();
+
+  await page.goto(`${baseUrl}slides/?slide=7`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => document.querySelector(".slide.active")?.getAttribute("aria-label") === "紧急降级找厕");
+  assert.match(await page.title(), /07\/15/);
   await page.close();
 });
 

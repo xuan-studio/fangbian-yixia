@@ -1455,7 +1455,34 @@ a {
   font: 9px/1.5 var(--font-mono);
 }
 
-.footer span:first-child { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); }
+.footer-brand,
+.footer-pitch-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.footer-brand { color: var(--muted); }
+
+.footer-meta {
+  margin-left: auto;
+  text-align: right;
+}
+
+.footer-pitch-link {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(200, 255, 61, 0.4);
+  border-radius: 3px;
+  color: var(--lime);
+  text-decoration: none;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.footer-pitch-link:hover {
+  background: var(--lime);
+  color: #071007;
+}
 
 .modal-backdrop {
   position: fixed;
@@ -2050,7 +2077,8 @@ a {
   border-top-color: #0e514c;
   color: #8db6af;
 }
-.theme-light .footer span:first-child { color: #d5e6e1; }
+.theme-light .footer-brand { color: #d5e6e1; }
+.theme-light .footer-pitch-link { border-color: rgba(200, 255, 61, 0.72); color: #e7ff9a; }
 
 .theme-light .modal-backdrop { background: rgba(44, 55, 50, 0.54); }
 .theme-light .modal-card {
@@ -2196,6 +2224,8 @@ a {
   .business-grid article { min-height: 190px; }
   .business-icon { margin-bottom: 18px; }
   .footer { align-items: flex-start; flex-direction: column; padding-top: 18px; padding-bottom: 18px; }
+  .footer-meta { margin-left: 0; text-align: left; }
+  .footer-pitch-link { min-height: 44px; }
   .modal-backdrop { padding: 12px; }
   .modal-card { padding: 22px 17px; box-shadow: none; }
   .health-form-grid,

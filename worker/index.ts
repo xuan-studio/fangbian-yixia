@@ -40,6 +40,12 @@ const worker = {
       }, allowedWidths);
     }
 
+    if (url.pathname === "/slides" || url.pathname === "/slides/") {
+      const target = new URL("/slides/index.html", request.url);
+      target.search = url.search;
+      return Response.redirect(target, 302);
+    }
+
     return handler.fetch(request, env, ctx);
   },
 };

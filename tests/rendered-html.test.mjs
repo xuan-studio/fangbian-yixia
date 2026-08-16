@@ -55,8 +55,8 @@ test("public and premium datasets preserve truthful status", async () => {
   }
 });
 
-test("offline and import contracts are packaged", async () => {
-  const [serviceWorker, schema, template, dashboard, styles, candidates, types] = await Promise.all([
+test("offline, import and open-source contracts are packaged", async () => {
+  const [serviceWorker, schema, template, dashboard, styles, candidates, types, slides, readme, aiGuide, worker] = await Promise.all([
     readFile(new URL("public/sw.js", root), "utf8"),
     readFile(new URL("public/data/toilet-record.schema.json", root), "utf8"),
     readFile(new URL("public/data/premium-import-template.json", root), "utf8"),
@@ -64,6 +64,10 @@ test("offline and import contracts are packaged", async () => {
     readFile(new URL("app/globals.css", root), "utf8"),
     readFile(new URL("public/data/xhs-candidates.json", root), "utf8").then(JSON.parse),
     readFile(new URL("app/types.ts", root), "utf8"),
+    readFile(new URL("public/slides/index.html", root), "utf8"),
+    readFile(new URL("README.md", root), "utf8"),
+    readFile(new URL("AI-DEPLOY.md", root), "utf8"),
+    readFile(new URL("worker/index.ts", root), "utf8"),
   ]);
   assert.match(serviceWorker, /public-toilets\.json/);
   assert.match(serviceWorker, /premium-comment-seeds\.json/);
@@ -95,5 +99,16 @@ test("offline and import contracts are packaged", async () => {
   assert.equal(candidates.status, "pending_verification");
   assert.ok(candidates.sourcePosts.length >= 10);
   assert.ok(candidates.venueCandidates.every((candidate) => candidate.coordinates === null));
+  assert.match(slides, /15 页交互路演/);
+  assert.match(slides, /aria-label="紧急降级找厕"/);
+  assert.match(readme, /让 AI 帮你在电脑上运行/);
+  assert.match(readme, /public\/slides\/preview\.gif/);
+  assert.match(aiGuide, /npm ci/);
+  assert.match(worker, /url\.pathname === "\/slides"/);
+  assert.match(worker, /\/slides\/index\.html/);
+  assert.doesNotMatch(readme + aiGuide, /\/Users\//);
+  await access(new URL("public/slides/preview.gif", root));
+  await access(new URL("AGENTS.md", root));
+  await access(new URL("LICENSE", root));
   await assert.rejects(access(new URL("app/_sites-preview", root)));
 });
