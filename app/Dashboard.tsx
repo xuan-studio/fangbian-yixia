@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GeoJsonLayer, IconLayer } from "@deck.gl/layers";
+import { GeoJsonLayer, IconLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import type { PickingInfo } from "@deck.gl/core";
 import * as maplibregl from "maplibre-gl";
+import Supercluster from "supercluster";
 import {
   type IControl,
   type Map as MapLibreMap,
@@ -89,7 +90,24 @@ type CommunityHubTab = "contribute" | "verify" | "history";
 type ContributionKind = "rating" | "fact_update" | "status_report" | "new_toilet";
 
 const SHANGHAI_CENTER: [number, number] = [121.4737, 31.2304];
+const SHANGHAI_BBOX: [number, number, number, number] = [120.8, 30.65, 122.15, 31.9];
 const MARKER_SURFACE_ALTITUDE = 52;
+
+type ClusterPointProperties = { record: ToiletRecord };
+type ClusterSummary = { open24hCount: number };
+type ToiletClusterDatum = {
+  kind: "cluster";
+  clusterId: number;
+  count: number;
+  countLabel: string;
+  open24hCount: number;
+  coordinates: [number, number];
+};
+type MapPickDatum = ToiletRecord | ToiletClusterDatum;
+
+function isClusterDatum(value: MapPickDatum): value is ToiletClusterDatum {
+  return "kind" in value && value.kind === "cluster";
+}
 const MAP_VISUAL_THEME: VisualTheme = "light";
 function makeOnlineStyle(theme: VisualTheme): StyleSpecification {
   const tileTheme = theme === "light" ? "light_all" : "dark_all";
@@ -367,6 +385,7 @@ function markerSizeForZoom(zoom: number) {
 
 function makeLayers(
   records: ToiletRecord[],
+  clusters: ToiletClusterDatum[],
   boundary: BoundaryData | null,
   selectedId: string | null,
   mode: MapMode,
@@ -392,6 +411,41 @@ function makeLayers(
           pickable: false,
         })
       : null,
+    new ScatterplotLayer<ToiletClusterDatum>({
+      id: "toilet-clusters",
+      data: clusters,
+      getPosition: (cluster) => [...cluster.coordinates, MARKER_SURFACE_ALTITUDE],
+      getRadius: (cluster) => 17 + Math.min(12, Math.log2(cluster.count) * 2.1),
+      radiusUnits: "pixels",
+      radiusMinPixels: 18,
+      radiusMaxPixels: 30,
+      getFillColor: theme === "light" ? [0, 126, 142, 238] : [22, 184, 199, 235],
+      getLineColor: (cluster) => cluster.open24hCount > 0
+        ? theme === "light" ? [255, 104, 72, 255] : [200, 255, 61, 255]
+        : [255, 255, 255, 220],
+      getLineWidth: 3,
+      lineWidthUnits: "pixels",
+      stroked: true,
+      filled: true,
+      pickable: true,
+      autoHighlight: true,
+      highlightColor: [255, 255, 255, 65],
+    }),
+    new TextLayer<ToiletClusterDatum>({
+      id: "toilet-cluster-counts",
+      data: clusters,
+      getPosition: (cluster) => [...cluster.coordinates, MARKER_SURFACE_ALTITUDE + 1],
+      getText: (cluster) => cluster.countLabel,
+      getSize: (cluster) => cluster.count >= 100 ? 11 : 13,
+      sizeUnits: "pixels",
+      getColor: [255, 255, 255, 255],
+      getTextAnchor: "middle",
+      getAlignmentBaseline: "center",
+      fontFamily: "SFMono-Regular, PingFang SC, sans-serif",
+      fontWeight: 700,
+      billboard: true,
+      pickable: false,
+    }),
     new IconLayer<ToiletRecord>({
       id: "toilet-location-pins",
       data: records,
@@ -420,7 +474,7 @@ function makeLayers(
       highlightColor: [255, 255, 255, 90],
     }),
   ];
-  return layers.filter(Boolean) as Array<GeoJsonLayer | IconLayer<ToiletRecord>>;
+  return layers.filter(Boolean) as Array<GeoJsonLayer | ScatterplotLayer<ToiletClusterDatum> | TextLayer<ToiletClusterDatum> | IconLayer<ToiletRecord>>;
 }
 
 function ToiletMap({
@@ -445,6 +499,49 @@ function ToiletMap({
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const [mapZoom, setMapZoom] = useState(9.1);
 
+  const { clusterIndex, priorityRecords } = useMemo(() => {
+    const priority = records.filter((record) => record.id === selectedId || record.sourceType !== "public_open_data");
+    const clusterable = records.filter((record) => record.id !== selectedId && record.sourceType === "public_open_data");
+    const index = new Supercluster<ClusterPointProperties, ClusterSummary>({
+      radius: 56,
+      maxZoom: 12,
+      minPoints: 3,
+      map: (properties) => ({ open24hCount: properties.record.open24h === true ? 1 : 0 }),
+      reduce: (summary, properties) => {
+        summary.open24hCount += properties.open24hCount;
+      },
+    });
+    index.load(clusterable.map((record) => ({
+      type: "Feature" as const,
+      properties: { record },
+      geometry: {
+        type: "Point" as const,
+        coordinates: [record.coordinates.longitude, record.coordinates.latitude],
+      },
+    })));
+    return { clusterIndex: index, priorityRecords: priority };
+  }, [records, selectedId]);
+
+  const { clusters, pinRecords } = useMemo(() => {
+    const visiblePins = [...priorityRecords];
+    const visibleClusters: ToiletClusterDatum[] = [];
+    for (const feature of clusterIndex.getClusters(SHANGHAI_BBOX, Math.floor(mapZoom))) {
+      if ("cluster" in feature.properties && feature.properties.cluster === true) {
+        visibleClusters.push({
+          kind: "cluster",
+          clusterId: feature.properties.cluster_id,
+          count: feature.properties.point_count,
+          countLabel: String(feature.properties.point_count_abbreviated),
+          open24hCount: feature.properties.open24hCount,
+          coordinates: feature.geometry.coordinates as [number, number],
+        });
+      } else if ("record" in feature.properties) {
+        visiblePins.push(feature.properties.record);
+      }
+    }
+    return { clusters: visibleClusters, pinRecords: visiblePins };
+  }, [clusterIndex, priorityRecords, mapZoom]);
+
   useEffect(() => {
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
@@ -463,24 +560,6 @@ function ToiletMap({
       // functional when the online basemap drops to the local empty style.
       interleaved: false,
       layers: [],
-      onClick: (info: PickingInfo<ToiletRecord>) => {
-        if (info.object) onSelect(info.object);
-      },
-      getTooltip: (info: PickingInfo<ToiletRecord>) =>
-        info.object
-          ? {
-              text: `${info.object.name}\n${info.object.district ?? "区域待核实"} · ${
-                info.object.open24h === true ? "24 小时" : "开放时间待核实"
-              }`,
-              style: {
-                backgroundColor: "#0b1722",
-                color: "#f4f8f6",
-                border: "1px solid #2c4854",
-                borderRadius: "2px",
-                fontSize: "12px",
-              },
-            }
-          : null,
     });
     mapRef.current = map;
     overlayRef.current = overlay;
@@ -523,12 +602,37 @@ function ToiletMap({
 
   useEffect(() => {
     overlayRef.current?.setProps({
-      layers: makeLayers(records, boundary, selectedId, mode, theme, mapZoom),
-      onClick: (info: PickingInfo<ToiletRecord>) => {
-        if (info.object) onSelect(info.object);
+      layers: makeLayers(pinRecords, clusters, boundary, selectedId, mode, theme, mapZoom),
+      onClick: (info: PickingInfo<MapPickDatum>) => {
+        if (!info.object) return;
+        if (isClusterDatum(info.object)) {
+          mapRef.current?.easeTo({
+            center: info.object.coordinates,
+            zoom: Math.min(clusterIndex.getClusterExpansionZoom(info.object.clusterId), 17),
+            duration: 650,
+          });
+        } else {
+          onSelect(info.object);
+        }
+      },
+      getTooltip: (info: PickingInfo<MapPickDatum>) => {
+        if (!info.object) return null;
+        const text = isClusterDatum(info.object)
+          ? `${info.object.count} 个厕所\n${info.object.open24hCount ? `其中 ${info.object.open24hCount} 个确认 24 小时\n` : ""}点击展开`
+          : `${info.object.name}\n${info.object.district ?? "区域待核实"} · ${info.object.open24h === true ? "24 小时" : "开放时间待核实"}`;
+        return {
+          text,
+          style: {
+            backgroundColor: "#0b1722",
+            color: "#f4f8f6",
+            border: "1px solid #2c4854",
+            borderRadius: "2px",
+            fontSize: "12px",
+          },
+        };
       },
     });
-  }, [records, boundary, selectedId, mode, theme, mapZoom, onSelect]);
+  }, [pinRecords, clusters, clusterIndex, boundary, selectedId, mode, theme, mapZoom, onSelect]);
 
   return <div className="map-canvas" ref={containerRef} aria-label="上海公共厕所 3D 地图" />;
 }
@@ -1252,13 +1356,13 @@ export function Dashboard() {
           <button className="status-button theme-button" onClick={() => setVisualTheme((current) => current === "light" ? "dark" : "light")} aria-label={`切换为${visualTheme === "light" ? "暗色" : "亮色"}模式`}>
             {visualTheme === "light" ? <Sun size={15} /> : <Moon size={15} />} {visualTheme === "light" ? "亮色" : "暗色"}
           </button>
-          <button className={`status-button ${mapMode === "offline" ? "is-offline" : ""}`} onClick={() => setMapMode((current) => current === "online" ? "offline" : "online")}>
+          <button className={`status-button map-mode-button ${mapMode === "offline" ? "is-offline" : ""}`} onClick={() => setMapMode((current) => current === "online" ? "offline" : "online")}>
             {mapMode === "online" ? <Wifi size={15} /> : <WifiOff size={15} />}
             {mapMode === "online" ? "在线底图" : "离线概念图"}
           </button>
           <button className="header-button community-button" onClick={() => openCommunityHub("contribute")}><Users size={16} /> 我要共建</button>
           <button className="header-button" onClick={() => openCommunityHub("verify")}><ListChecks size={16} /> 验证中心 <span className="header-count">{locationCandidates.filter((item) => item.status === "collecting").length + communityClaims.filter((item) => item.status === "collecting").length}</span></button>
-          <button className="header-button" onClick={() => fileRef.current?.click()}><Upload size={16} /> 导入榜单 JSON</button>
+          <button className="header-button import-button" onClick={() => fileRef.current?.click()}><Upload size={16} /> 导入榜单 JSON</button>
           <button className="header-button is-accent" onClick={() => setDemoOpen(true)}><Sparkles size={16} /> 3 分钟演示</button>
           <input ref={fileRef} className="visually-hidden" type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleImport(file); event.currentTarget.value = ""; }} />
         </nav>
@@ -1310,7 +1414,10 @@ export function Dashboard() {
         <section className="map-stage">
           <div className="map-stage-top">
             <div><span className="map-kicker"><Layers3 size={14} /> SHANGHAI / 3D INTELLIGENCE</span><h1>全城厕所态势</h1></div>
-            <div className="map-count"><strong>{filteredRecords.length}</strong><span>当前命中</span></div>
+            <div className="map-stage-actions">
+              <div className="map-count"><strong>{filteredRecords.length}</strong><span>当前命中</span></div>
+              <button className="panic-button" onClick={toggleEmergency}><Zap size={19} fill="currentColor" /><span><strong>憋不住了</strong><small>启动四级降级找厕</small></span><ChevronRight size={18} /></button>
+            </div>
           </div>
           <div className="map-frame">
             {loading && <div className="map-loading"><Radar size={24} /><span>正在展开上海厕所情报网…</span></div>}
@@ -1318,7 +1425,6 @@ export function Dashboard() {
             <ToiletMap records={filteredRecords} boundary={boundary} selectedId={visibleSelectedId} mode={mapMode} theme={MAP_VISUAL_THEME} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />
             <div className="map-scanlines" aria-hidden="true" />
             <div className="map-location"><MapPin size={14} /><span>{locationLabel}</span><button onClick={locateUser} aria-label="获取我的位置" title="获取我的位置"><LocateFixed size={15} /></button></div>
-            <button className="panic-button" onClick={toggleEmergency}><Zap size={19} fill="currentColor" /><span><strong>憋不住了</strong><small>启动四级降级找厕</small></span><ChevronRight size={18} /></button>
             {mapNotice && <div className="map-notice"><CircleCheck size={15} /> {mapNotice}<button aria-label="关闭提示" title="关闭" onClick={() => setMapNotice(null)}><X size={14} /></button></div>}
             {emergencyOpen && (
               <div className="emergency-panel">
@@ -1335,7 +1441,7 @@ export function Dashboard() {
                 <div className="route-disclaimer"><CircleAlert size={14} /> 距离为直线估算，不提供精确导航；开放时间未知时，请优先电话或现场确认。</div>
               </div>
             )}
-            <div className="map-legend"><span><i className="dot-lime" />24 小时</span><span><i className="dot-cyan" />公开数据</span><span><i className="dot-gold" />优质榜单</span><span><i className="dot-community" />社区上线</span></div>
+            <div className="map-legend"><span><i className="dot-cluster" />聚合数量</span><span><i className="dot-lime" />24 小时</span><span><i className="dot-cyan" />公开数据</span><span><i className="dot-gold" />优质榜单</span><span><i className="dot-community" />社区上线</span></div>
             <div className="map-attribution">© OpenStreetMap contributors · 离线轮廓为概念可视化</div>
           </div>
         </section>

@@ -101,11 +101,16 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.doesNotMatch(dashboard, /transitions:\s*\{\s*getElevation/);
   assert.doesNotMatch(dashboard, /ColumnLayer/);
   assert.doesNotMatch(dashboard, /toilet-marker-glow|selected-halo/);
+  assert.match(dashboard, /new Supercluster/);
+  assert.match(dashboard, /id: "toilet-clusters"/);
+  assert.match(dashboard, /getClusterExpansionZoom/);
+  assert.match(dashboard, /maxZoom: 12/);
   assert.match(dashboard, /function markerSizeForZoom/);
   assert.match(dashboard, /id: "toilet-location-pins"[\s\S]*sizeUnits: "pixels"/);
   assert.match(dashboard, /url: "\/assets\/toilet-pin\.png"/);
   assert.match(dashboard, /map\.on\("zoom", syncZoom\)/);
   assert.match(styles, /\.map-frame \.map-canvas\s*\{[^}]*height:\s*100%/s);
+  assert.match(styles, /\.map-stage-actions/);
   assert.equal(candidates.status, "pending_verification");
   assert.ok(candidates.sourcePosts.length >= 10);
   assert.ok(candidates.venueCandidates.every((candidate) => candidate.coordinates === null));

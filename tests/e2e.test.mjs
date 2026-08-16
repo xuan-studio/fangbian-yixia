@@ -146,11 +146,14 @@ test("mobile layout exposes every primary action without horizontal discovery", 
   assert.equal(await mainSiteLink.isVisible(), true, "手机首屏应提供返回主站入口");
   assert.equal(await mainSiteLink.getAttribute("href"), "https://w3xuan.xyz");
 
-  for (const label of ["切换为亮色模式", "在线底图", "我要共建", /验证中心 1/, "导入榜单 JSON", "3 分钟演示"]) {
+  for (const label of ["我要共建", /验证中心 1/, "3 分钟演示"]) {
     assert.equal(await page.getByRole("button", { name: label, exact: typeof label === "string" }).isVisible(), true, `${String(label)} 应在手机顶部直接可见`);
   }
+  for (const label of ["切换为亮色模式", "在线底图", "导入榜单 JSON"]) {
+    assert.equal(await page.getByRole("button", { name: label, exact: true }).isVisible(), false, `${label} 应退出手机首屏以避免拥挤`);
+  }
   const viewportMetrics = await page.evaluate(() => {
-    const actions = Array.from(document.querySelectorAll(".top-actions button"));
+    const actions = Array.from(document.querySelectorAll(".top-actions button")).filter((button) => getComputedStyle(button).display !== "none");
     const map = document.querySelector(".map-stage")?.getBoundingClientRect();
     const panic = document.querySelector(".panic-button")?.getBoundingClientRect();
     const premiumList = document.querySelector(".premium-list");
@@ -169,6 +172,7 @@ test("mobile layout exposes every primary action without horizontal discovery", 
   assert.ok(viewportMetrics.actionHeights.every((height) => height >= 44), `手机顶部操作未达到 44px 触控高度：${JSON.stringify(viewportMetrics.actionHeights)}`);
   assert.ok(viewportMetrics.mapTop < viewportMetrics.height * 0.3, `地图未进入手机首屏：${JSON.stringify(viewportMetrics)}`);
   assert.ok(viewportMetrics.panicTop >= 0 && viewportMetrics.panicBottom <= viewportMetrics.height + 1, `紧急找厕按钮未完整进入首屏：${JSON.stringify(viewportMetrics)}`);
+  assert.ok(viewportMetrics.panicTop < viewportMetrics.mapTop + 120, `紧急找厕按钮应位于地图首屏标题区：${JSON.stringify(viewportMetrics)}`);
   assert.equal(viewportMetrics.premiumOverflowY, "visible", "手机榜单不应截获页面纵向滚动");
 
   await page.getByRole("button", { name: /憋不住了/ }).click();
