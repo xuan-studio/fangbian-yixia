@@ -141,8 +141,35 @@ test("mobile layout exposes every primary action without horizontal discovery", 
   for (const label of ["切换为亮色模式", "在线底图", "我要共建", /验证中心 1/, "导入榜单 JSON", "3 分钟演示"]) {
     assert.equal(await page.getByRole("button", { name: label, exact: typeof label === "string" }).isVisible(), true, `${String(label)} 应在手机顶部直接可见`);
   }
-  const viewportMetrics = await page.evaluate(() => ({ width: window.innerWidth, scrollWidth: document.documentElement.scrollWidth }));
+  const viewportMetrics = await page.evaluate(() => {
+    const actions = Array.from(document.querySelectorAll(".top-actions button"));
+    const map = document.querySelector(".map-stage")?.getBoundingClientRect();
+    const panic = document.querySelector(".panic-button")?.getBoundingClientRect();
+    const premiumList = document.querySelector(".premium-list");
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      scrollWidth: document.documentElement.scrollWidth,
+      actionHeights: actions.map((button) => button.getBoundingClientRect().height),
+      mapTop: map?.top ?? Number.POSITIVE_INFINITY,
+      panicTop: panic?.top ?? Number.POSITIVE_INFINITY,
+      panicBottom: panic?.bottom ?? Number.POSITIVE_INFINITY,
+      premiumOverflowY: premiumList ? getComputedStyle(premiumList).overflowY : "missing",
+    };
+  });
   assert.ok(viewportMetrics.scrollWidth <= viewportMetrics.width + 1, `手机页面出现横向溢出：${JSON.stringify(viewportMetrics)}`);
+  assert.ok(viewportMetrics.actionHeights.every((height) => height >= 44), `手机顶部操作未达到 44px 触控高度：${JSON.stringify(viewportMetrics.actionHeights)}`);
+  assert.ok(viewportMetrics.mapTop < viewportMetrics.height * 0.3, `地图未进入手机首屏：${JSON.stringify(viewportMetrics)}`);
+  assert.ok(viewportMetrics.panicTop >= 0 && viewportMetrics.panicBottom <= viewportMetrics.height + 1, `紧急找厕按钮未完整进入首屏：${JSON.stringify(viewportMetrics)}`);
+  assert.equal(viewportMetrics.premiumOverflowY, "visible", "手机榜单不应截获页面纵向滚动");
+
+  await page.getByRole("button", { name: /憋不住了/ }).click();
+  const emergencyMetrics = await page.locator(".emergency-panel").evaluate((panel) => {
+    const rect = panel.getBoundingClientRect();
+    return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left, width: innerWidth, height: innerHeight };
+  });
+  assert.ok(emergencyMetrics.top >= 0 && emergencyMetrics.left >= 0 && emergencyMetrics.right <= emergencyMetrics.width && emergencyMetrics.bottom <= emergencyMetrics.height, `手机紧急面板超出可视区：${JSON.stringify(emergencyMetrics)}`);
+  await page.locator(".emergency-panel").getByRole("button", { name: "关闭" }).click();
   await page.close();
 });
 
