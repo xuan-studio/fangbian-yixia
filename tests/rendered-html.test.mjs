@@ -33,6 +33,10 @@ test("public and premium datasets preserve truthful status", async () => {
     readFile(new URL("public/data/building-location-candidates.json", root), "utf8").then(JSON.parse),
   ]);
   assert.ok(publicData.records.length >= 900);
+  assert.ok(publicData.records.every((record) => record.nameStatus));
+  assert.ok(publicData.records.every((record) => record.sourceMetadata === null || typeof record.sourceMetadata === "object"));
+  assert.equal(publicData.records.filter((record) => record.name === `${record.district}公共厕所`).length, 0);
+  assert.ok(publicData.records.filter((record) => record.nameStatus === "generated" || record.nameStatus === "source_generic").every((record) => record.tags.includes("名称待补充")));
   assert.equal(premiumData.status, "ready");
   assert.equal(premiumData.records.length, 12);
   assert.equal(matchData.records.length, premiumData.records.length);

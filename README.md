@@ -64,6 +64,7 @@ npm test
 - 统一厕所接口：[app/types.ts](app/types.ts)。
 - JSON Schema：[public/data/toilet-record.schema.json](public/data/toilet-record.schema.json)。
 - 缺失事实必须使用 `null`，界面显示“待核实”；未知不能写成“没有”。
+- OpenStreetMap 未提供具体名称时，使用带来源编号的“无名公共厕所”占位名，并标记“名称待补充”，不得伪装成正式名称。
 - 平台证据、Mock 评论和现场评论必须保留来源类型。
 - 新厕所和楼内位置先进入候选池；未验证内容不得进入正式紧急推荐。
 - 推广内容不得改变紧急模式的距离、开放状态和可用性排序。

@@ -81,7 +81,8 @@ test("golden map, emergency and community flows remain usable", async () => {
   await page.waitForFunction(() => document.querySelector(".map-count strong")?.textContent?.trim() === "129");
   await page.getByRole("combobox", { name: "开放状态" }).selectOption("24h");
   await page.waitForFunction(() => document.querySelector(".map-count strong")?.textContent?.trim() === "8");
-  assert.equal(await page.getByRole("heading", { name: "黄浦区公共厕所" }).innerText(), "黄浦区公共厕所");
+  assert.notEqual(await page.locator(".detail-head h2").innerText(), "黄浦区公共厕所", "无名点不应再伪装成区级正式名称");
+  assert.match(await page.locator(".detail-head p").innerText(), /黄浦区/, "筛选后的详情仍应保留正确行政区");
   await page.getByRole("button", { name: "重置", exact: true }).click();
   await page.waitForFunction(() => document.querySelector(".map-count strong")?.textContent?.trim() === "953");
 

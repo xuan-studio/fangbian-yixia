@@ -59,6 +59,13 @@ const nullableTag = (value) => {
   return null;
 };
 
+const genericNames = new Set(["公共厕所", "公厕", "厕所", "卫生间", "洗手间", "Toilette", "Toilet"]);
+
+const sourceNameState = (name) => {
+  if (!name) return "generated";
+  return genericNames.has(name.trim()) ? "source_generic" : "source_specific";
+};
+
 const compactAddress = (tags) => {
   const direct = tags["addr:full"] || tags.address;
   if (direct) return direct;
@@ -88,10 +95,15 @@ const normalizeElement = (element) => {
     ? tags.opening_hours.trim() === "24/7"
     : null;
   const hasBabyCare = nullableTag(tags.changing_table || tags.baby);
+  const rawName = typeof tags.name === "string" ? tags.name.trim() : "";
+  const nameStatus = sourceNameState(rawName);
+  const displayName = nameStatus === "source_specific"
+    ? rawName
+    : `无名公共厕所 · OSM ${String(element.id).slice(-6)}`;
   const confidence = Math.min(
     0.86,
     0.5 +
-      (tags.name ? 0.08 : 0) +
+      (nameStatus === "source_specific" ? 0.08 : 0) +
       (tags.opening_hours ? 0.08 : 0) +
       (tags.wheelchair ? 0.06 : 0) +
       (compactAddress(tags) ? 0.06 : 0),
@@ -103,6 +115,13 @@ const normalizeElement = (element) => {
     truthy(tags.changing_table) ? "母婴设施" : null,
     tags.fee === "no" ? "免费" : null,
     tags.access === "customers" ? "顾客专用" : null,
+    nameStatus !== "source_specific" ? "名称待补充" : null,
+    tags.operator ? `运营:${tags.operator}` : null,
+    tags.level ? `楼层:${tags.level}` : null,
+    truthy(tags.indoor) ? "室内" : null,
+    truthy(tags.male) ? "男厕" : null,
+    truthy(tags.female) ? "女厕" : null,
+    truthy(tags.unisex) ? "无性别厕所" : null,
   ].filter(Boolean);
 
   return {
@@ -112,7 +131,8 @@ const normalizeElement = (element) => {
     sourceUrl: `https://www.openstreetmap.org/${element.type}/${element.id}`,
     sourceRef: `${element.type}/${element.id}`,
     dataStatus: "community_report",
-    name: tags.name || `${district}公共厕所`,
+    name: displayName,
+    nameStatus,
     district,
     address: compactAddress(tags),
     coordinates: { longitude, latitude },
@@ -132,6 +152,17 @@ const normalizeElement = (element) => {
     healthScore: null,
     confidence,
     description: tags.description || tags.note || null,
+    sourceMetadata: {
+      operator: tags.operator || null,
+      level: tags.level || null,
+      indoor: nullableTag(tags.indoor),
+      male: nullableTag(tags.male),
+      female: nullableTag(tags.female),
+      unisex: nullableTag(tags.unisex),
+      fee: tags.fee || null,
+      access: tags.access || null,
+      rawTags: Object.fromEntries(Object.entries(tags).filter(([, value]) => typeof value === "string")),
+    },
     comments: [],
     updatedAt: null,
   };

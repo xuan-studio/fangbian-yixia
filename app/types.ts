@@ -31,6 +31,7 @@ export type ToiletRecord = {
   sourceRef: string | null;
   dataStatus: "verified" | "community_report" | "pending_verification";
   name: string;
+  nameStatus?: "source_specific" | "source_generic" | "generated" | "community";
   district: string | null;
   address: string | null;
   coordinates: {
@@ -53,6 +54,17 @@ export type ToiletRecord = {
   healthScore: number | null;
   confidence: number | null;
   description: string | null;
+  sourceMetadata?: {
+    operator: string | null;
+    level: string | null;
+    indoor: NullableBoolean;
+    male: NullableBoolean;
+    female: NullableBoolean;
+    unisex: NullableBoolean;
+    fee: string | null;
+    access: string | null;
+    rawTags: Record<string, string>;
+  } | null;
   comments: CommentRecord[];
   updatedAt: string | null;
 };

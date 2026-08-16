@@ -1347,7 +1347,7 @@ export function Dashboard() {
                 <div className="eyebrow"><Navigation size={14} /> SELECTED FACILITY</div>
                 <h2>{selected.name}</h2>
                 <p><MapPin size={14} /> {selected.address ?? `${selected.district ?? "区域"} · 具体地址待核实`}</p>
-                <div className="detail-badges"><span className={selected.open24h === true ? "is-open" : ""}><Clock3 size={13} /> {selected.open24h === true ? "24 小时" : selected.openingHours ?? "时间待核实"}</span><span><ShieldCheck size={13} /> 可信度 {selected.confidence === null ? "待核实" : `${Math.round(selected.confidence * 100)}%`}</span></div>
+                <div className="detail-badges"><span className={selected.open24h === true ? "is-open" : ""}><Clock3 size={13} /> {selected.open24h === true ? "24 小时" : selected.openingHours ?? "时间待核实"}</span><span><ShieldCheck size={13} /> 可信度 {selected.confidence === null ? "待核实" : `${Math.round(selected.confidence * 100)}%`}</span>{selected.nameStatus === "generated" || selected.nameStatus === "source_generic" ? <span><CircleAlert size={13} /> 名称待补充</span> : null}</div>
                 {publishedIndoorLocation ? <div className={`published-indoor-location status-${publishedIndoorLocation.status}`}><Layers3 size={15} /><div><span>{publishedIndoorLocation.status === "published_demo" ? "演示上线位置" : "社区已上线位置"}</span><strong>{publishedIndoorLocation.floor} · {publishedIndoorLocation.zone}</strong></div></div> : null}
               </div>
 

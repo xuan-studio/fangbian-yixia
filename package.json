@@ -9,6 +9,7 @@
     "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "build:premium": "node scripts/build-premium-toilets.mjs",
+    "upgrade:public-data": "node scripts/upgrade-public-toilet-names.mjs",
     "build:preview": "node scripts/build-readme-preview.mjs",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "test": "npm run build && npm run test:unit && npm run test:e2e",
