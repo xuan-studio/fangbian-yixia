@@ -58,5 +58,6 @@ npm test
 - [办公小浣熊编号提示词](docs/office-raccoon-prompts.md)
 - [60 分钟复演脚本](docs/60-minute-replay.md)
 - [Starter 交付检查单](docs/starter-checklist.md)
+- [15 页路演分享版](slides/fangbian-yixia-pitch-share.html)：图片和字体均已内嵌，单文件可离线打开。
 
 比赛前把整个目录压缩为 Starter；现场只用办公小浣熊按编号提示词推进，不临时改变数据接口或视觉方向。
