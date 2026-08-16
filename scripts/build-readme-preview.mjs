@@ -14,6 +14,7 @@ const chromeCandidates = [
   "/Applications/Chromium.app/Contents/MacOS/Chromium",
   "/usr/bin/google-chrome",
   "/usr/bin/chromium",
+  "/usr/bin/chromium-browser",
 ].filter(Boolean);
 
 async function findChrome() {
