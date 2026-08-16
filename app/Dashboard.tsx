@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { GeoJsonLayer, IconLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import type { PickingInfo } from "@deck.gl/core";
 import * as maplibregl from "maplibre-gl";
@@ -360,9 +360,9 @@ function freshnessLabel(updatedAt: string | null) {
   return updatedAt;
 }
 
-function markerRadiusForZoom(zoom: number) {
+function markerSizeForZoom(zoom: number) {
   const progress = Math.max(0, Math.min(1, (zoom - 7.6) / (17 - 7.6)));
-  return 4.2 + Math.pow(progress, 0.72) * 5.8;
+  return 16 + Math.pow(progress, 0.72) * 10;
 }
 
 function makeLayers(
@@ -373,8 +373,7 @@ function makeLayers(
   theme: VisualTheme,
   zoom: number,
 ) {
-  const selected = records.find((record) => record.id === selectedId);
-  const markerRadius = markerRadiusForZoom(zoom);
+  const markerSize = markerSizeForZoom(zoom);
   const layers = [
     boundary
       ? new GeoJsonLayer({
@@ -393,65 +392,35 @@ function makeLayers(
           pickable: false,
         })
       : null,
-    new ScatterplotLayer<ToiletRecord>({
-      id: "toilet-marker-glow",
+    new IconLayer<ToiletRecord>({
+      id: "toilet-location-pins",
       data: records,
       getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude, MARKER_SURFACE_ALTITUDE],
-      getRadius: (record) => markerRadius + (record.id === selectedId ? 7 : 3.2),
-      radiusUnits: "pixels",
-      radiusMinPixels: 6,
-      radiusMaxPixels: 19,
-      getFillColor: (record) => {
-        if (record.sourceType === "premium_xhs") return [245, 168, 36, theme === "light" ? 48 : 38];
-        if (record.sourceType === "user_import") return [154, 127, 240, theme === "light" ? 54 : 42];
-        if (record.open24h === true) return theme === "light" ? [255, 99, 71, 50] : [190, 255, 61, 38];
-        return theme === "light" ? [0, 146, 162, 44] : [66, 221, 238, 34];
-      },
-      stroked: false,
-      filled: true,
-      pickable: false,
-    }),
-    new ScatterplotLayer<ToiletRecord>({
-      id: "toilet-markers",
-      data: records,
-      getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude, MARKER_SURFACE_ALTITUDE],
-      getRadius: (record) => markerRadius + (record.id === selectedId ? 2.4 : 0),
-      radiusUnits: "pixels",
-      radiusMinPixels: 4,
-      radiusMaxPixels: 13,
-      getFillColor: (record) => {
+      getIcon: () => ({
+        url: "/assets/toilet-pin.png",
+        width: 64,
+        height: 80,
+        anchorY: 80,
+        mask: true,
+      }),
+      getSize: (record) => markerSize + (record.id === selectedId ? 6 : 0),
+      sizeUnits: "pixels",
+      sizeMinPixels: 15,
+      sizeMaxPixels: 32,
+      getColor: (record) => {
         if (record.sourceType === "premium_xhs") return [245, 168, 36, 238];
         if (record.sourceType === "user_import") return [154, 127, 240, 232];
         if (record.open24h === true) return theme === "light" ? [255, 99, 71, 238] : [190, 255, 61, 220];
         return theme === "light" ? [0, 146, 162, 220] : [66, 221, 238, 205];
       },
-      getLineColor: theme === "light" ? [255, 255, 255, 190] : [240, 255, 253, 120],
-      lineWidthMinPixels: 1,
-      stroked: true,
-      filled: true,
+      billboard: true,
+      alphaCutoff: 0.05,
       pickable: true,
       autoHighlight: true,
-      highlightColor: [255, 255, 255, 120],
+      highlightColor: [255, 255, 255, 90],
     }),
-    selected
-      ? new ScatterplotLayer<ToiletRecord>({
-          id: "selected-halo",
-          data: [selected],
-          getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude, MARKER_SURFACE_ALTITUDE],
-          getRadius: markerRadius + 10,
-          radiusUnits: "pixels",
-          radiusMinPixels: 14,
-          radiusMaxPixels: 23,
-          getFillColor: [255, 255, 255, 12],
-          getLineColor: [255, 255, 255, 235],
-          lineWidthMinPixels: 2,
-          stroked: true,
-          filled: true,
-          pickable: false,
-        })
-      : null,
   ];
-  return layers.filter(Boolean) as Array<GeoJsonLayer | ScatterplotLayer<ToiletRecord>>;
+  return layers.filter(Boolean) as Array<GeoJsonLayer | IconLayer<ToiletRecord>>;
 }
 
 function ToiletMap({

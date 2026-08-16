@@ -1,8 +1,9 @@
-const CACHE_NAME = "fangbian-yixia-v4";
+const CACHE_NAME = "fangbian-yixia-v5";
 const CORE_ASSETS = [
   "/",
   "/favicon.svg",
   "/og.png",
+  "/assets/toilet-pin.png",
   "/data/public-toilets.json",
   "/data/premium-toilets.json",
   "/data/premium-matches.json",

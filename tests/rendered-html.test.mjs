@@ -96,8 +96,10 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.doesNotMatch(dashboard, /map\.on\("error", failOnline\)/);
   assert.doesNotMatch(dashboard, /transitions:\s*\{\s*getElevation/);
   assert.doesNotMatch(dashboard, /ColumnLayer/);
-  assert.match(dashboard, /function markerRadiusForZoom/);
-  assert.match(dashboard, /id: "toilet-markers"[\s\S]*radiusUnits: "pixels"/);
+  assert.doesNotMatch(dashboard, /toilet-marker-glow|selected-halo/);
+  assert.match(dashboard, /function markerSizeForZoom/);
+  assert.match(dashboard, /id: "toilet-location-pins"[\s\S]*sizeUnits: "pixels"/);
+  assert.match(dashboard, /url: "\/assets\/toilet-pin\.png"/);
   assert.match(dashboard, /map\.on\("zoom", syncZoom\)/);
   assert.match(styles, /\.map-frame \.map-canvas\s*\{[^}]*height:\s*100%/s);
   assert.equal(candidates.status, "pending_verification");
@@ -112,6 +114,7 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.match(worker, /\/slides\/index\.html/);
   assert.doesNotMatch(readme + aiGuide, /\/Users\//);
   await access(new URL("public/slides/preview.gif", root));
+  await access(new URL("public/assets/toilet-pin.png", root));
   await access(new URL("AGENTS.md", root));
   await access(new URL("LICENSE", root));
   await assert.rejects(access(new URL("app/_sites-preview", root)));
