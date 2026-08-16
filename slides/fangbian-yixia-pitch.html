@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#10100f" />
+  <title>方便一下｜5 分钟黑客松路演</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    /* === THEME TOKENS === */
+    :root {
+      --stage-bg: #1a1a18;
+      --slide-bg: #f6f4ee;
+      --paper: #f6f4ee;
+      --paper-2: #ebe8de;
+      --ink: #10100f;
+      --muted: #74716a;
+      --line: rgba(16, 16, 15, 0.13);
+      --lime: #c9ff4d;
+      --coral: #f45138;
+      --cyan: #58c9d2;
+      --gold: #d7a63a;
+      --purple: #7a6bd5;
+      --danger: #dc3545;
+      --font-display: "Noto Sans SC", sans-serif;
+      --font-serif: "Noto Serif SC", serif;
+      --font-mono: "IBM Plex Mono", monospace;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration: 560ms;
+    }
+
+    /* === RESET === */
+    * { box-sizing: border-box; }
+    h1, h2, h3, p, figure, ul { margin: 0; }
+    button { font: inherit; }
+
+    /* ===========================================
+       FIXED 16:9 STAGE: MANDATORY BASE STYLES
+       Include this ENTIRE file in every presentation.
+       Slides are authored at 1920×1080 and scaled as a whole.
+       =========================================== */
+
+    /* 1. Lock the browser viewport */
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--stage-bg, #000);
+    }
+
+    /* 2. Full-window deck viewport */
+    .deck-viewport {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        background: var(--stage-bg, #000);
+    }
+
+    /* 3. Fixed 16:9 design canvas.
+       JavaScript sets transform: translate(...) scale(...). */
+    .deck-stage {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        transform-origin: 0 0;
+        background: var(--slide-bg, #fff);
+    }
+
+    /* 4. Slides stack inside the fixed stage.
+       Content must be laid out at 1920×1080, not reflowed per device. */
+    .slide {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        background: var(--slide-bg, #fff);
+    }
+
+    .slide.active,
+    .slide.visible {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        z-index: 1;
+    }
+
+    /* 5. Keep media inside authored slide bounds */
+    img,
+    video,
+    canvas,
+    svg {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    /* 6. Presentation chrome stays outside the slide design system */
+    .deck-controls {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 1000;
+    }
+
+    /* 7. Print one fixed-size slide per page */
+    @media print {
+        html,
+        body {
+            width: 1920px;
+            height: auto;
+            overflow: visible;
+            background: #fff;
+        }
+
+        .deck-viewport {
+            position: static;
+            overflow: visible;
+            background: #fff;
+        }
+
+        .deck-stage {
+            position: static;
+            width: auto;
+            height: auto;
+            transform: none !important;
+            background: none;
+        }
+
+        .slide {
+            position: relative;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            width: 1920px;
+            height: 1080px;
+            break-after: page;
+            page-break-after: always;
+        }
+
+        .slide:last-child {
+            break-after: auto;
+            page-break-after: auto;
+        }
+
+        .deck-controls {
+            display: none !important;
+        }
+    }
+
+    /* 8. Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.2s !important;
+        }
+    }
+
+    /* === GLOBAL SLIDE LANGUAGE === */
+    .slide {
+      font-family: var(--font-display);
+      color: var(--ink);
+      isolation: isolate;
+    }
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background-image:
+        linear-gradient(to right, var(--line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+      background-size: 160px 160px;
+      mask-image: linear-gradient(90deg, transparent 0, #000 11%, #000 100%);
+      pointer-events: none;
+    }
+    .slide::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 16px;
+      background: var(--lime);
+      z-index: 5;
+    }
+    .slide-topline {
+      position: absolute;
+      left: 92px;
+      right: 92px;
+      top: 52px;
+      height: 62px;
+      border-top: 4px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 21px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      z-index: 3;
+    }
+    .slide-topline .section { color: var(--muted); }
+    .slide-topline .page { color: var(--coral); }
+    .slide-title {
+      position: absolute;
+      left: 96px;
+      top: 148px;
+      width: 1580px;
+      font-size: 72px;
+      line-height: 1.1;
+      letter-spacing: -0.045em;
+      font-weight: 900;
+    }
+    .slide-title.serif { font-family: var(--font-serif); letter-spacing: -0.035em; }
+    .kicker {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .mono { font-family: var(--font-mono); }
+    .serif { font-family: var(--font-serif); }
+    .lime-mark { background: var(--lime); padding: 0 12px 8px; }
+    .coral-mark { background: var(--coral); color: white; padding: 0 12px 8px; }
+    .muted { color: var(--muted); }
+    .fine-print { font-size: 22px; line-height: 1.5; color: var(--muted); }
+    .rule { height: 4px; background: var(--ink); }
+    .vertical-rule { width: 4px; background: var(--ink); }
+
+    /* === REVEAL MOTION === */
+    .reveal,
+    .reveal-left,
+    .reveal-scale {
+      opacity: 0;
+      transition:
+        opacity var(--duration) var(--ease) var(--delay, 0ms),
+        transform var(--duration) var(--ease) var(--delay, 0ms),
+        filter var(--duration) var(--ease) var(--delay, 0ms);
+    }
+    .reveal { transform: translateY(34px); }
+    .reveal-left { transform: translateX(-44px); }
+    .reveal-scale { transform: scale(0.94); filter: blur(6px); }
+    .slide.visible .reveal,
+    .slide.visible .reveal-left,
+    .slide.visible .reveal-scale,
+    .capture .reveal,
+    .capture .reveal-left,
+    .capture .reveal-scale {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+    .capture .reveal,
+    .capture .reveal-left,
+    .capture .reveal-scale { transition: none !important; }
+
+    /* === SHARED SCREENSHOT TREATMENT === */
+    .shot-frame {
+      position: absolute;
+      overflow: hidden;
+      border: 4px solid var(--ink);
+      background: #091018;
+      box-shadow: 18px 18px 0 rgba(16, 16, 15, 0.16);
+    }
+    .shot-frame::after {
+      content: "REAL PRODUCT";
+      position: absolute;
+      right: 0;
+      top: 0;
+      padding: 10px 18px;
+      background: var(--lime);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      z-index: 2;
+    }
+    .shot-frame img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    /* === SLIDE 01: TITLE === */
+    .title-slide .title-grid { position: absolute; inset: 0; z-index: -1; }
+    .title-slide .top {
+      position: absolute; left: 96px; right: 96px; top: 64px; height: 72px;
+      border-top: 4px solid var(--ink); display: flex; align-items: center; justify-content: space-between;
+      font-family: var(--font-mono); font-size: 22px; font-weight: 600; letter-spacing: .14em;
+    }
+    .title-slide .top span:last-child { color: var(--coral); }
+    .title-slide .number { position: absolute; left: 96px; top: 190px; font: 600 30px var(--font-mono); color: var(--muted); letter-spacing: .08em; }
+    .title-slide h1 { position: absolute; left: 94px; top: 250px; font-size: 204px; font-weight: 900; line-height: .88; letter-spacing: -.065em; white-space: nowrap; }
+    .title-slide .statement { position: absolute; left: 108px; top: 694px; width: 920px; font: 900 52px/1.36 var(--font-serif); letter-spacing: -.025em; }
+    .title-slide .meta { position: absolute; left: 108px; top: 916px; font: 600 23px var(--font-mono); letter-spacing: .06em; }
+    .title-slide .map { position: absolute; right: 76px; top: 176px; width: 690px; height: 760px; border-left: 4px solid var(--ink); overflow: hidden; }
+    .title-slide .route { position: absolute; inset: 50px 30px 30px 50px; }
+    .title-slide .route path { fill: none; stroke: var(--ink); stroke-width: 8; stroke-linecap: square; stroke-linejoin: miter; stroke-dasharray: 1600; stroke-dashoffset: 1600; transition: stroke-dashoffset 1.4s .25s ease; }
+    .title-slide.visible .route path, .capture .title-slide .route path { stroke-dashoffset: 0; }
+    .title-slide .route circle { fill: var(--lime); stroke: var(--ink); stroke-width: 8; }
+    .title-slide .stamp { position: absolute; right: 94px; bottom: 68px; background: var(--ink); color: #fff; padding: 15px 22px; font-size: 20px; font-weight: 700; letter-spacing: .16em; }
+
+    /* === SLIDE 02: FAILED JOURNEY === */
+    .journey-number { position: absolute; left: 96px; top: 340px; font: 900 178px/1 var(--font-display); letter-spacing: -.07em; }
+    .journey-number small { display: block; font: 600 22px var(--font-mono); letter-spacing: .1em; color: var(--muted); margin: 16px 0 0 8px; }
+    .journey-line { position: absolute; left: 570px; right: 100px; top: 455px; height: 8px; background: var(--ink); }
+    .journey-line::after { content: ""; position: absolute; right: -1px; top: -17px; border-left: 42px solid var(--ink); border-top: 20px solid transparent; border-bottom: 20px solid transparent; }
+    .journey-stop { position: absolute; top: 433px; width: 260px; }
+    .journey-stop .dot { width: 52px; height: 52px; border: 8px solid var(--ink); border-radius: 50%; background: var(--paper); margin-bottom: 32px; }
+    .journey-stop.fail .dot { background: var(--coral); }
+    .journey-stop strong { display: block; font-size: 36px; line-height: 1.2; }
+    .journey-stop span { display: block; margin-top: 12px; font-size: 25px; line-height: 1.45; color: var(--muted); }
+    .journey-stop.s1 { left: 600px; } .journey-stop.s2 { left: 915px; } .journey-stop.s3 { left: 1230px; } .journey-stop.s4 { left: 1540px; }
+    .journey-caption { position: absolute; left: 600px; bottom: 104px; font: 900 50px/1.2 var(--font-serif); }
+
+    /* === SLIDE 03: EQUATION === */
+    .equation { position: absolute; left: 94px; right: 94px; top: 390px; display: grid; grid-template-columns: 1fr 70px 1fr 70px 1fr 70px 1fr; align-items: center; }
+    .factor { min-height: 250px; border-top: 8px solid var(--ink); padding-top: 26px; }
+    .factor strong { display: block; font-size: 68px; line-height: 1.05; letter-spacing: -.05em; }
+    .factor span { display: block; margin-top: 22px; font-size: 25px; line-height: 1.5; color: var(--muted); }
+    .factor.hot { background: var(--lime); padding: 26px 26px 30px; border-top-color: var(--ink); transform: translateY(-20px); }
+    .factor.hot span { color: var(--ink); }
+    .times { text-align: center; font: 500 46px var(--font-mono); }
+    .equation-result { position: absolute; left: 96px; bottom: 92px; right: 96px; display: flex; align-items: end; justify-content: space-between; }
+    .equation-result strong { font: 900 58px var(--font-serif); }
+
+    /* === SLIDE 04: DATA SOURCES === */
+    .sources-copy { position: absolute; left: 96px; top: 352px; width: 790px; }
+    .source-row { display: grid; grid-template-columns: 190px 1fr; align-items: baseline; border-top: 4px solid var(--ink); padding: 26px 0 30px; }
+    .source-row .big { font: 900 90px/1 var(--font-display); letter-spacing: -.06em; }
+    .source-row .big.live { font: 600 54px var(--font-mono); color: var(--coral); }
+    .source-row h3 { font-size: 35px; line-height: 1.2; }
+    .source-row p { font-size: 25px; color: var(--muted); margin-top: 9px; }
+    .sources-shot { left: 990px; top: 260px; width: 790px; height: 710px; background: #f7f4ec; }
+    .sources-shot img { object-fit: cover; object-position: 50% 4%; }
+
+    /* === SLIDE 05: TRUST ENGINE === */
+    .engine-row { position: absolute; left: 96px; right: 96px; top: 410px; display: grid; grid-template-columns: 270px 70px 270px 70px 270px 70px 270px 70px 270px; align-items: center; }
+    .engine-node { height: 280px; border-top: 7px solid var(--ink); padding-top: 28px; }
+    .engine-node.accent { background: var(--lime); padding: 28px 24px 22px; transform: translateY(-18px); }
+    .engine-node .index { font: 600 20px var(--font-mono); color: var(--muted); }
+    .engine-node strong { display: block; margin-top: 52px; font-size: 45px; line-height: 1.08; letter-spacing: -.04em; }
+    .engine-node p { margin-top: 18px; font-size: 23px; line-height: 1.5; color: var(--muted); }
+    .engine-node.accent p, .engine-node.accent .index { color: var(--ink); }
+    .engine-arrow { font: 500 52px var(--font-mono); text-align: center; }
+    .engine-outcomes { position: absolute; left: 96px; right: 96px; bottom: 92px; border-top: 4px solid var(--ink); padding-top: 24px; display: flex; justify-content: space-between; font: 600 25px var(--font-mono); }
+
+    /* === SLIDE 06: COMMENT TO CONSENSUS === */
+    .consensus-copy { position: absolute; left: 96px; top: 340px; width: 780px; }
+    .quote { font: 900 58px/1.35 var(--font-serif); }
+    .structured { margin-top: 42px; border-left: 12px solid var(--lime); padding: 16px 0 16px 28px; font: 600 24px/1.75 var(--font-mono); }
+    .votes { display: flex; align-items: center; gap: 20px; margin-top: 55px; font: 900 40px var(--font-display); }
+    .votes .phase { padding: 12px 18px 16px; border: 4px solid var(--ink); }
+    .votes .phase.done { background: var(--lime); }
+    .votes .arrow { font-family: var(--font-mono); }
+    .consensus-shot { left: 1010px; top: 234px; width: 690px; height: 750px; }
+    .consensus-shot img { object-fit: cover; object-position: 100% 20%; }
+
+    /* === SLIDE 07: EMERGENCY FALLBACK === */
+    .emergency-shot { left: 118px; top: 304px; width: 1684px; height: 560px; }
+    .emergency-shot img { object-fit: cover; object-position: 50% 22%; }
+    .emergency-axis { position: absolute; left: 118px; right: 118px; bottom: 92px; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 6px solid var(--ink); }
+    .emergency-axis div { padding: 24px 22px 0; border-right: 2px solid var(--line); }
+    .emergency-axis strong { font: 600 23px var(--font-mono); color: var(--coral); }
+    .emergency-axis span { display: block; margin-top: 8px; font-size: 27px; font-weight: 700; }
+
+    /* === SLIDE 08: COMMUNITY FLYWHEEL === */
+    .community-shot { left: 90px; top: 290px; width: 900px; height: 670px; }
+    .community-shot img { object-fit: cover; object-position: 50% 45%; }
+    .flywheel { position: absolute; left: 1110px; top: 310px; width: 660px; }
+    .fly-row { border-top: 5px solid var(--ink); padding: 25px 0 29px; }
+    .fly-row .tag { display: inline-block; padding: 6px 11px 9px; background: var(--ink); color: #fff; font: 600 18px var(--font-mono); letter-spacing: .08em; }
+    .fly-row.next .tag { background: var(--gold); color: var(--ink); }
+    .fly-row.result .tag { background: var(--lime); color: var(--ink); }
+    .fly-row h3 { margin-top: 14px; font-size: 38px; line-height: 1.18; }
+    .fly-row p { margin-top: 10px; font-size: 24px; line-height: 1.45; color: var(--muted); }
+    .fly-loop { position: absolute; right: 100px; bottom: 76px; font: 600 22px var(--font-mono); color: var(--muted); }
+
+    /* === SLIDE 09: TEAM ROADMAP === */
+    .roadmap-slide .slide-title { width: 1680px; font-size: 68px; }
+    .roadmap-grid {
+      position: absolute;
+      left: 96px;
+      right: 96px;
+      top: 315px;
+      display: grid;
+      grid-template-columns: 1fr 72px 1fr 72px 1fr;
+      align-items: stretch;
+    }
+    .roadmap-stage {
+      position: relative;
+      min-height: 468px;
+      padding: 28px 32px 32px;
+      border-top: 9px solid var(--ink);
+      background: rgba(246, 244, 238, .9);
+    }
+    .roadmap-stage.service { border-top-color: var(--coral); }
+    .roadmap-stage.city { border-top-color: var(--ink); background: var(--lime); }
+    .roadmap-stage .phase {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font: 600 19px var(--font-mono);
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+    .roadmap-stage.city .phase { color: var(--ink); }
+    .roadmap-stage .phase b {
+      display: inline-grid;
+      place-items: center;
+      width: 54px;
+      height: 42px;
+      background: var(--ink);
+      color: #fff;
+      font: 600 20px var(--font-mono);
+    }
+    .roadmap-stage.service .phase b { background: var(--coral); }
+    .roadmap-stage h3 { margin-top: 34px; font-size: 48px; line-height: 1.08; letter-spacing: -.045em; }
+    .roadmap-item { border-top: 3px solid var(--ink); padding-top: 15px; margin-top: 22px; }
+    .roadmap-item strong { display: block; font-size: 27px; line-height: 1.2; }
+    .roadmap-item span { display: block; margin-top: 7px; font-size: 21px; line-height: 1.42; color: var(--muted); }
+    .roadmap-stage.city .roadmap-item span { color: rgba(16,16,15,.72); }
+    .roadmap-arrow { display: grid; place-items: center; font: 500 50px var(--font-mono); }
+    .roadmap-loop {
+      position: absolute;
+      left: 96px;
+      right: 96px;
+      bottom: 97px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 28px;
+      padding-top: 20px;
+      border-top: 5px solid var(--ink);
+    }
+    .roadmap-loop .label { background: var(--ink); color: #fff; padding: 9px 15px 12px; font: 600 18px var(--font-mono); letter-spacing: .08em; }
+    .roadmap-loop strong { font: 900 31px/1.2 var(--font-serif); }
+    .roadmap-guardrails { position: absolute; right: 96px; bottom: 48px; font: 600 17px var(--font-mono); color: var(--muted); letter-spacing: .025em; }
+
+    /* === SLIDE 10: BUSINESS VALUE FLOW === */
+    .business-flow { position: absolute; left: 96px; right: 96px; top: 390px; display: grid; grid-template-columns: 1fr 110px 1fr 110px 1fr; align-items: stretch; }
+    .business-part { min-height: 350px; border-top: 8px solid var(--ink); padding: 34px 24px 20px 0; }
+    .business-part:nth-child(3) { border-top-color: var(--gold); }
+    .business-part:nth-child(5) { border-top-color: var(--lime); background: rgba(201,255,77,.22); padding-left: 24px; }
+    .business-part .who { font: 600 21px var(--font-mono); color: var(--muted); }
+    .business-part h3 { margin-top: 48px; font-size: 52px; line-height: 1.08; }
+    .business-part p { margin-top: 25px; font-size: 27px; line-height: 1.48; color: var(--muted); }
+    .business-arrow { display: grid; place-items: center; font: 500 64px var(--font-mono); }
+    .trust-bar { position: absolute; left: 96px; right: 96px; bottom: 78px; background: var(--ink); color: white; padding: 25px 34px 30px; display: flex; align-items: center; justify-content: space-between; font-size: 31px; font-weight: 900; }
+    .trust-bar b { color: var(--lime); }
+
+    /* === SLIDE 11: CITY SIGNALS === */
+    .city-copy { position: absolute; left: 96px; top: 340px; width: 690px; }
+    .city-signal { border-top: 5px solid var(--ink); padding: 25px 0 28px; }
+    .city-signal strong { display: block; font-size: 42px; }
+    .city-signal span { display: block; margin-top: 10px; font-size: 25px; line-height: 1.45; color: var(--muted); }
+    .city-shot { left: 860px; top: 260px; width: 950px; height: 700px; background: #f3f1e9; }
+    .city-shot img { object-fit: cover; object-position: 54% 34%; opacity: .92; }
+    .heat { position: absolute; border: 10px solid var(--coral); border-radius: 50%; opacity: .8; z-index: 3; }
+    .heat.h1 { width: 150px; height: 150px; left: 1240px; top: 420px; }
+    .heat.h2 { width: 220px; height: 220px; left: 1490px; top: 600px; border-color: var(--gold); }
+    .heat.h3 { width: 110px; height: 110px; left: 1070px; top: 690px; border-color: var(--cyan); }
+    .city-source { position: absolute; right: 105px; bottom: 78px; font: 600 18px var(--font-mono); color: var(--muted); }
+
+    /* === SLIDE 12: CLOSING === */
+    .closing-slide h2 { position: absolute; left: 96px; top: 185px; width: 1240px; font: 900 106px/1.17 var(--font-serif); letter-spacing: -.05em; }
+    .closing-slide .closing-copy { position: absolute; left: 104px; top: 690px; width: 920px; font-size: 41px; font-weight: 700; line-height: 1.45; }
+    .closing-slide .closing-copy span { background: var(--lime); padding: 0 10px 7px; }
+    .closing-map { position: absolute; right: 80px; top: 172px; width: 660px; height: 760px; border-left: 4px solid var(--ink); }
+    .closing-map svg { position: absolute; inset: 30px; }
+    .closing-map path { fill: none; stroke: var(--ink); stroke-width: 8; stroke-dasharray: 18 15; }
+    .closing-map circle { fill: var(--lime); stroke: var(--ink); stroke-width: 8; }
+    .closing-map .verify { position: absolute; right: 0; bottom: 18px; background: var(--ink); color: white; padding: 20px 26px; font: 600 20px var(--font-mono); }
+
+    /* === SLIDE 13: TRUST MODEL === */
+    .trust-three { position: absolute; left: 96px; right: 96px; top: 360px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 70px; }
+    .trust-dimension { border-top: 8px solid var(--ink); padding-top: 30px; min-height: 420px; }
+    .trust-dimension:nth-child(2) { border-top-color: var(--cyan); }
+    .trust-dimension:nth-child(3) { border-top-color: var(--gold); }
+    .trust-dimension .metric { font: 900 104px/1 var(--font-display); letter-spacing: -.06em; }
+    .trust-dimension h3 { margin-top: 45px; font-size: 45px; }
+    .trust-dimension p { margin-top: 18px; font-size: 27px; line-height: 1.48; color: var(--muted); }
+    .trust-note { position: absolute; left: 96px; right: 96px; bottom: 76px; background: var(--lime); padding: 20px 28px 25px; font: 900 31px var(--font-serif); }
+
+    /* === SLIDE 14: TECHNICAL FALLBACK === */
+    .tech-stack { position: absolute; left: 96px; top: 330px; width: 720px; }
+    .tech-layer { display: grid; grid-template-columns: 190px 1fr; border-top: 5px solid var(--ink); padding: 24px 0 27px; }
+    .tech-layer strong { font: 600 20px var(--font-mono); color: var(--muted); }
+    .tech-layer span { font-size: 34px; font-weight: 900; }
+    .offline-shot { left: 900px; top: 270px; width: 900px; height: 620px; }
+    .offline-shot img { object-fit: cover; object-position: center; }
+    .limitations { position: absolute; left: 900px; right: 120px; bottom: 72px; border-top: 5px solid var(--ink); padding-top: 20px; font: 600 21px/1.6 var(--font-mono); color: var(--muted); }
+
+    /* === SLIDE 15: SAFETY BOUNDARIES === */
+    .boundaries { position: absolute; left: 96px; right: 96px; top: 360px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 62px; }
+    .boundary { position: relative; min-height: 470px; padding-left: 36px; }
+    .boundary::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 12px; background: var(--ink); }
+    .boundary:nth-child(2)::before { background: var(--gold); }
+    .boundary:nth-child(3)::before { background: var(--danger); }
+    .boundary .num { font: 600 20px var(--font-mono); color: var(--muted); }
+    .boundary h3 { margin-top: 44px; font-size: 55px; line-height: 1.08; }
+    .boundary p { margin-top: 30px; font-size: 29px; line-height: 1.5; color: var(--muted); }
+    .boundary strong { color: var(--ink); }
+    .final-boundary { position: absolute; left: 96px; bottom: 74px; font: 900 36px var(--font-serif); }
+
+    /* === OUTSIDE-STAGE CONTROLS === */
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(10, 10, 9, 0.82);
+      color: white;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
+      opacity: .22;
+      transition: opacity .25s ease;
+    }
+    .deck-controls:hover { opacity: 1; }
+    .deck-controls button { width: 34px; height: 30px; border: 0; background: transparent; color: white; cursor: pointer; font-size: 20px; }
+    .deck-controls .count { min-width: 58px; text-align: center; font: 500 12px var(--font-mono); }
+    .progress-track { width: 100px; height: 3px; background: rgba(255,255,255,.22); overflow: hidden; }
+    .progress-fill { width: 0; height: 100%; background: var(--lime); transition: width .3s var(--ease); }
+    .capture .deck-controls, .capture .edit-hotzone, .capture .edit-toggle, .capture .edit-toolbar { display: none !important; }
+
+    /* === INLINE EDITING === */
+    .edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+    .edit-toggle { position: fixed; top: 18px; left: 18px; width: 46px; height: 46px; border: 0; border-radius: 50%; background: var(--ink); color: white; opacity: 0; pointer-events: none; transition: opacity .3s ease; z-index: 10001; cursor: pointer; }
+    .edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+    .edit-toolbar { position: fixed; left: 76px; top: 18px; display: flex; gap: 8px; padding: 7px; background: var(--ink); border-radius: 8px; opacity: 0; pointer-events: none; z-index: 10002; transition: opacity .25s ease; }
+    .edit-toolbar.active { opacity: 1; pointer-events: auto; }
+    .edit-toolbar button { border: 1px solid rgba(255,255,255,.25); color: white; background: transparent; padding: 8px 12px; border-radius: 5px; cursor: pointer; font: 500 12px var(--font-mono); }
+    body.editing [data-editable] { outline: 2px dashed var(--coral); outline-offset: 4px; cursor: text; }
+  </style>
+</head>
+<body>
+  <div class="deck-viewport">
+    <main class="deck-stage" id="deckStage" aria-live="polite">
+
+      <!-- === SLIDE 01 === -->
+      <section class="slide title-slide active visible" aria-label="方便一下封面">
+        <header class="top"><span>SHANGHAI RELIEF MAP</span><span>HACKATHON 2026</span></header>
+        <div class="number">01 / 城市公共服务</div>
+        <h1 class="reveal-left" data-editable>方便一下</h1>
+        <div class="statement reveal" style="--delay:180ms" data-editable><span class="lime-mark">城市里最急的一刻</span><br>也应该有可信答案。</div>
+        <div class="meta reveal" style="--delay:330ms" data-editable>AI 结构化 × 多人验证 × 紧急找厕</div>
+        <div class="map" aria-hidden="true">
+          <svg class="route" viewBox="0 0 600 680"><path d="M40 94 L176 94 L176 192 L362 192 L362 304 L270 304 L270 414 L480 414 L480 570 L378 570"/><circle cx="40" cy="94" r="19"/><circle cx="378" cy="570" r="27"/></svg>
+        </div>
+        <div class="stamp" data-editable>以屎为镜，可以知天命</div>
+      </section>
+      <!-- Speaker 20s: 大家好，我们做的是「方便一下」。它不是又一个厕所榜单，而是一张由城市居民共同维护的厕所情报地图：平时帮你发现好厕所，真正着急时，告诉你哪一个现在最可能用得上。 -->
+
+      <!-- === SLIDE 02 === -->
+      <section class="slide" aria-label="找厕痛点">
+        <header class="slide-topline"><span class="section">01 / PROBLEM</span><span class="page">02 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>厕所明明就在附近，却可能根本用不了</h2>
+        <div class="journey-number reveal-left" style="--delay:100ms" data-editable>30 M<small>地图显示的“附近”</small></div>
+        <div class="journey-line reveal-scale" style="--delay:180ms"></div>
+        <div class="journey-stop s1 reveal" style="--delay:230ms"><div class="dot"></div><strong data-editable>看到点位</strong><span data-editable>地图说：就在附近</span></div>
+        <div class="journey-stop s2 reveal" style="--delay:300ms"><div class="dot"></div><strong data-editable>绕楼找入口</strong><span data-editable>楼层与入口未知</span></div>
+        <div class="journey-stop s3 reveal" style="--delay:370ms"><div class="dot"></div><strong data-editable>到达现场</strong><span data-editable>需要密码或暂不开放</span></div>
+        <div class="journey-stop s4 fail reveal" style="--delay:440ms"><div class="dot"></div><strong data-editable>重新寻找</strong><span data-editable>“附近”没有解决“现在”</span></div>
+        <div class="journey-caption reveal" style="--delay:520ms" data-editable>一个缺失的细节，就会让点位变成无效答案。</div>
+      </section>
+      <!-- Speaker 25s: 传统地图解决的是经纬度，但厕所是高度依赖现场信息的空间。它可能藏在商场五楼、写字楼地下一层，甚至入口只对内部人员开放。真正着急时，缺少任何一个细节，地图上的点都可能变成无效答案。 -->
+
+      <!-- === SLIDE 03 === -->
+      <section class="slide" aria-label="厕所可用性公式">
+        <header class="slide-topline"><span class="section">01 / PROBLEM</span><span class="page">03 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>真正可用，不只取决于点位数量</h2>
+        <div class="equation">
+          <div class="factor reveal" style="--delay:100ms"><strong data-editable>位置</strong><span data-editable>厕所在哪一栋楼</span></div><div class="times">×</div>
+          <div class="factor reveal" style="--delay:180ms"><strong data-editable>细节</strong><span data-editable>楼层、入口与设施</span></div><div class="times">×</div>
+          <div class="factor hot reveal-scale" style="--delay:260ms"><strong data-editable>时效</strong><span data-editable>现在是否开放、拥挤</span></div><div class="times">×</div>
+          <div class="factor reveal" style="--delay:340ms"><strong data-editable>可信度</strong><span data-editable>谁验证过，何时验证</span></div>
+        </div>
+        <div class="equation-result reveal" style="--delay:440ms"><strong data-editable>= 真正可用的厕所</strong><span class="fine-print" data-editable>不知道就是“待核实”，不能直接当成“没有”。</span></div>
+      </section>
+      <!-- Speaker 20s: 我们把厕所的可用性拆成四层：在哪里、楼里怎么走、现在是什么状态，以及这些信息有多少人验证过。只要其中一层缺失，系统就明确显示“待核实”，而不是用猜测补齐数据。 -->
+
+      <!-- === SLIDE 04 === -->
+      <section class="slide" aria-label="三类数据来源">
+        <header class="slide-topline"><span class="section">02 / DATA</span><span class="page">04 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>三类数据合在一起，才接近厕所的真实状态</h2>
+        <div class="sources-copy">
+          <div class="source-row reveal" style="--delay:80ms"><div class="big">941</div><div><h3 data-editable>公开厕所点</h3><p data-editable>解决全城覆盖</p></div></div>
+          <div class="source-row reveal" style="--delay:160ms"><div class="big">12</div><div><h3 data-editable>榜单场所线索</h3><p data-editable>补充体验与内容入口</p></div></div>
+          <div class="source-row reveal" style="--delay:240ms"><div class="big live">LIVE</div><div><h3 data-editable>用户现场反馈</h3><p data-editable>补充楼层、状态和最近变化</p></div></div>
+        </div>
+        <figure class="shot-frame sources-shot reveal-scale" style="--delay:220ms"><img src="fangbian-yixia-pitch-assets/premium-ranking.png" alt="方便一下小红书优质榜单地图截图"></figure>
+      </section>
+      <!-- Speaker 20s: 我们先用 941 个公开厕所点覆盖上海，再把小红书里的 12 个榜单场所转成结构化线索。但场所坐标不等于厕所已经核实，真正的楼层、入口和状态，仍然需要用户在现场补充。 Sources: public-toilets.json records=941; premium-toilets.json records=12. -->
+
+      <!-- === SLIDE 05 === -->
+      <section class="slide" aria-label="共建信任引擎">
+        <header class="slide-topline"><span class="section">02 / SYSTEM</span><span class="page">05 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>用户看到的是 3D 地图，背后运转的是共建信任引擎</h2>
+        <div class="engine-row">
+          <div class="engine-node reveal" style="--delay:80ms"><span class="index">01 · INPUT</span><strong data-editable>多源数据</strong><p data-editable>公开点、社交线索、用户评论</p></div><div class="engine-arrow">→</div>
+          <div class="engine-node accent reveal-scale" style="--delay:150ms"><span class="index">02 · AI</span><strong data-editable>结构化</strong><p data-editable>楼层、方位、设施、状态</p></div><div class="engine-arrow">→</div>
+          <div class="engine-node reveal" style="--delay:220ms"><span class="index">03 · TRUST</span><strong data-editable>多人验证</strong><p data-editable>确认、反对、信誉权重</p></div><div class="engine-arrow">→</div>
+          <div class="engine-node reveal" style="--delay:290ms"><span class="index">04 · RECORD</span><strong data-editable>可信档案</strong><p data-editable>状态分层、版本留痕</p></div><div class="engine-arrow">→</div>
+          <div class="engine-node reveal" style="--delay:360ms"><span class="index">05 · ACTION</span><strong data-editable>行动答案</strong><p data-editable>地图、评分、紧急推荐</p></div>
+        </div>
+        <div class="engine-outcomes reveal" style="--delay:460ms"><span data-editable>3D MAP</span><span data-editable>TRUE RATING</span><span data-editable>EMERGENCY FALLBACK</span></div>
+      </section>
+      <!-- Speaker 25s: 用户看到的是一张 3D 地图，但真正重要的是背后的信任引擎。AI 负责把自然语言整理成楼层、方位、设施和状态；社区负责验证真假；系统保留每次修改记录，最终再把可信结果提供给地图、评分和紧急推荐。 -->
+
+      <!-- === SLIDE 06 === -->
+      <section class="slide" aria-label="评论到共识">
+        <header class="slide-topline"><span class="section">03 / CORE LOOP</span><span class="page">06 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>一条评论，经过验证，变成下一位用户的答案</h2>
+        <div class="consensus-copy">
+          <div class="quote reveal" data-editable>“5F 东南侧，<br>靠近扶梯。”</div>
+          <div class="structured reveal" style="--delay:140ms" data-editable>floor: 5F<br>direction: 东南侧<br>landmark: 扶梯</div>
+          <div class="votes reveal" style="--delay:250ms"><span class="phase" data-editable>0 / 3</span><span class="arrow">→</span><span class="phase done" data-editable>3 / 3 上线</span></div>
+          <p class="fine-print reveal" style="--delay:340ms" data-editable>演示票与真实社区确认分开计数，每一次修改都可追溯。</p>
+        </div>
+        <figure class="shot-frame consensus-shot reveal-scale" style="--delay:180ms"><img src="fangbian-yixia-pitch-assets/indoor-consensus.png" alt="楼内位置多人共识验证截图"></figure>
+      </section>
+      <!-- Speaker 35s: 比如用户评论“厕所位于五楼东南侧，靠近扶梯”。AI 会先提取楼层、方位和地标，但不会直接修改地图。这个候选需要三位独立用户确认后才能上线，而且每次投稿、确认和反对都会留下版本记录。现在演示中的模拟票也与真实社区确认分开计数，避免把 Demo 当成真实共识。 -->
+
+      <!-- === SLIDE 07 === -->
+      <section class="slide" aria-label="紧急降级找厕">
+        <header class="slide-topline"><span class="section">03 / EMERGENCY</span><span class="page">07 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>真正憋不住时，系统必须持续给出下一步</h2>
+        <figure class="shot-frame emergency-shot reveal-scale" style="--delay:120ms"><img src="fangbian-yixia-pitch-assets/emergency.png" alt="憋不住了四级紧急降级界面"></figure>
+        <div class="emergency-axis">
+          <div class="reveal" style="--delay:180ms"><strong>L1</strong><span data-editable>严选可信近厕</span></div>
+          <div class="reveal" style="--delay:240ms"><strong>L2</strong><span data-editable>放宽设施条件</span></div>
+          <div class="reveal" style="--delay:300ms"><strong>L3</strong><span data-editable>接受信息不完整</span></div>
+          <div class="reveal" style="--delay:360ms"><strong>L4</strong><span data-editable>人工求助，不断流程</span></div>
+        </div>
+      </section>
+      <!-- Speaker 30s: “憋不住了”先推荐距离近、开放状态明确、可信度较高的厕所。如果没有，就逐步放宽设施和数据完整度。到第四级，即使系统无法给出可靠点位，也会建议询问服务台或扩大搜索范围，不让流程中断。当前距离是直线估算，不冒充精确导航。 -->
+
+      <!-- === SLIDE 08 === -->
+      <section class="slide" aria-label="用户共建飞轮">
+        <header class="slide-topline"><span class="section">04 / COMMUNITY</span><span class="page">08 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>评分、投稿、验证和激励，让地图越用越准</h2>
+        <figure class="shot-frame community-shot reveal-scale" style="--delay:100ms"><img src="fangbian-yixia-pitch-assets/community-hub.png" alt="厕所共建中心界面"></figure>
+        <div class="flywheel">
+          <div class="fly-row reveal" style="--delay:160ms"><span class="tag">已实现</span><h3 data-editable>六维评分 · 投稿 · 验证</h3><p data-editable>新厕所、临时状态和版本记录进入同一候选池。</p></div>
+          <div class="fly-row next reveal" style="--delay:240ms"><span class="tag">下一步</span><h3 data-editable>积分 · 耗时 · 附近任务</h3><p data-editable>把维护地图变成随手完成的社区行动。</p></div>
+          <div class="fly-row result reveal" style="--delay:320ms"><span class="tag">飞轮</span><h3 data-editable>数据更准，参与更多</h3><p data-editable>更好的推荐，反过来创造更多有效贡献。</p></div>
+        </div>
+        <div class="fly-loop" data-editable>CONTRIBUTE → VERIFY → RECOMMEND → REPEAT</div>
+      </section>
+      <!-- Speaker 30s: 用户可以从卫生、气味、排队、舒适、指引和设施六个维度评分，也可以提交新厕所或报告临时关闭。下一步，我们会把找厕所的实际耗时变成城市摩擦指标，并通过贡献积分、附近验证任务和社区信誉，激励更多人维护数据。 -->
+
+      <!-- === SLIDE 09 === -->
+      <section class="slide roadmap-slide" aria-label="小组共创产品路线图">
+        <header class="slide-topline"><span class="section">04 / TEAM ROADMAP</span><span class="page">09 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>下一步：从找得到，走向有人帮、城市会学习</h2>
+        <div class="roadmap-grid">
+          <div class="roadmap-stage reveal" style="--delay:80ms">
+            <div class="phase"><span>NOW · 可信底座</span><b>P0</b></div>
+            <h3 data-editable>先让每条信息<br>值得相信</h3>
+            <div class="roadmap-item"><strong data-editable>楼内评论投稿 → 多人验证</strong><span data-editable>AI 提取楼层、方位与设施，3 人确认后上线。</span></div>
+            <div class="roadmap-item"><strong data-editable>真实评分 × 找厕耗时</strong><span data-editable>体验、可信度和信息新鲜度分别记录。</span></div>
+          </div>
+          <div class="roadmap-arrow reveal" style="--delay:150ms">→</div>
+          <div class="roadmap-stage service reveal" style="--delay:190ms">
+            <div class="phase"><span>NEXT · 服务网络</span><b>P1</b></div>
+            <h3 data-editable>再把场景中的<br>求助接起来</h3>
+            <div class="roadmap-item"><strong data-editable>老人求助 · 商场服务台</strong><span data-editable>一键询问、联系紧急联系人或提交报修。</span></div>
+            <div class="roadmap-item"><strong data-editable>宠物 · 海外通行 · 免费用品</strong><span data-editable>授权限时信息与品牌赞助的必需品服务。</span></div>
+          </div>
+          <div class="roadmap-arrow reveal" style="--delay:260ms">→</div>
+          <div class="roadmap-stage city reveal-scale" style="--delay:310ms">
+            <div class="phase"><span>SCALE · 城市共治</span><b>P2</b></div>
+            <h3 data-editable>最终让城市<br>从反馈中学习</h3>
+            <div class="roadmap-item"><strong data-editable>验证任务 · 贡献信誉</strong><span data-editable>激励真实维护，同时抵抗刷评和过期信息。</span></div>
+            <div class="roadmap-item"><strong data-editable>物业洞察 · 规划建议</strong><span data-editable>匿名聚合设施缺口，反哺服务与市政规划。</span></div>
+          </div>
+        </div>
+        <div class="roadmap-loop reveal" style="--delay:400ms"><span class="label">COMMUNITY LOOP</span><strong data-editable>一次寻找 → 一条新证据 → 一次验证 → 下一位用户少走一步</strong></div>
+        <div class="roadmap-guardrails" data-editable>授权通行信息 · 推广不干预排序 · 匿名聚合不上传个人轨迹</div>
+      </section>
+      <!-- Speaker 25s: 这是我们小组共同形成的下一步路线。我们不只是继续向地图里加按钮，而是先把评论、验证、评分和找厕耗时变成可信数据；再连接老人求助、商场服务、宠物、海外通行和免费必需品；最终用贡献信誉和匿名聚合反馈，反哺物业服务与城市规划。每一次使用，都会让下一位用户少走一步。 -->
+
+      <!-- === SLIDE 10 === -->
+      <section class="slide" aria-label="商业模式">
+        <header class="slide-topline"><span class="section">05 / BUSINESS</span><span class="page">10 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>先替用户解决急事，再向场所和品牌收费</h2>
+        <div class="business-flow">
+          <div class="business-part reveal" style="--delay:100ms"><span class="who">USER VALUE</span><h3 data-editable>用户获得<br>可靠服务</h3><p data-editable>免费找厕、真实推荐、应急用品。</p></div><div class="business-arrow">→</div>
+          <div class="business-part reveal" style="--delay:190ms"><span class="who">VENUE SaaS</span><h3 data-editable>场所获得<br>运营反馈</h3><p data-editable>体验雷达、设施缺口、报修与服务台连接。</p></div><div class="business-arrow">→</div>
+          <div class="business-part reveal" style="--delay:280ms"><span class="who">SPONSOR</span><h3 data-editable>品牌赞助<br>应急用品</h3><p data-editable>纸巾、卫生用品、尿布和宠物清洁袋。</p></div>
+        </div>
+        <div class="trust-bar reveal" style="--delay:380ms"><span data-editable>商业化不能破坏用户最需要的信任</span><b data-editable>推广永不影响紧急排序与真实评分</b></div>
+      </section>
+      <!-- Speaker 25s: 商场和园区可以为体验反馈、设施缺口和服务台连接付费；品牌可以赞助纸巾、卫生用品、尿布和宠物清洁袋。用户也可以自愿观看品牌内容换取用品，但广告不能成为找厕所的门槛，推广更不能改变紧急排序。 -->
+
+      <!-- === SLIDE 11 === -->
+      <section class="slide" aria-label="城市规划价值">
+        <header class="slide-topline"><span class="section">05 / CITY VALUE</span><span class="page">11 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>使用反馈会成为城市公共服务的温度计</h2>
+        <div class="city-copy">
+          <div class="city-signal reveal" style="--delay:90ms"><strong data-editable>找厕耗时</strong><span data-editable>发现入口难找、指引不足等空间摩擦。</span></div>
+          <div class="city-signal reveal" style="--delay:170ms"><strong data-editable>拥挤与设施缺口</strong><span data-editable>帮助场所和市政识别服务盲区。</span></div>
+          <div class="city-signal reveal" style="--delay:250ms"><strong data-editable>匿名聚合</strong><span data-editable>服务规划与研究，不出售个人健康记录。</span></div>
+        </div>
+        <figure class="shot-frame city-shot reveal-scale" style="--delay:140ms"><img src="fangbian-yixia-pitch-assets/basemap-online.png" alt="上海在线底图与厕所分布"></figure>
+        <i class="heat h1 reveal-scale" style="--delay:280ms"></i><i class="heat h2 reveal-scale" style="--delay:350ms"></i><i class="heat h3 reveal-scale" style="--delay:420ms"></i>
+        <div class="city-source" data-editable>经用户授权 · 匿名化 · 聚合处理</div>
+      </section>
+      <!-- Speaker 25s: 找厕所花了多久，本身就是一种城市体验数据。它可能说明入口难找、指引不足或设施布局不合理。经过用户授权和匿名聚合后，这些反馈可以支持商场运营和市政规划。健康研究也只能使用自愿、匿名、汇总后的趋势数据。 -->
+
+      <!-- === SLIDE 12 === -->
+      <section class="slide closing-slide" aria-label="结尾愿景">
+        <header class="slide-topline"><span class="section">06 / CLOSING</span><span class="page">12 · 15</span></header>
+        <h2 class="reveal-left" data-editable>上海不是没有厕所，<br>只是缺一张理解<br>“现在就要方便一下”<br>的地图。</h2>
+        <div class="closing-copy reveal" style="--delay:220ms" data-editable><span>每一次贡献</span>，都在帮助下一位着急的人。</div>
+        <div class="closing-map reveal-scale" style="--delay:160ms" aria-hidden="true">
+          <svg viewBox="0 0 600 700"><path d="M45 80 L180 80 L180 186 L338 186 L338 298 L258 298 L258 426 L486 426 L486 590 L370 590"/><circle cx="45" cy="80" r="18"/><circle cx="370" cy="590" r="30"/></svg>
+          <div class="verify">✓ 3 / 3 VERIFIED</div>
+        </div>
+      </section>
+      <!-- Speaker 20s: 「方便一下」从解决一个人最急的需求开始，再把每一次评论、验证和找厕经历，沉淀成所有人都能使用的城市知识。上海不是没有厕所，只是缺少一张真正理解“现在就要方便一下”的地图。 -->
+
+      <!-- === SLIDE 13 / Q&A === -->
+      <section class="slide" aria-label="可信度模型备份页">
+        <header class="slide-topline"><span class="section">Q&A / TRUST MODEL</span><span class="page">13 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>一个厕所为什么值得信？三个指标必须分开</h2>
+        <div class="trust-three">
+          <div class="trust-dimension reveal" style="--delay:80ms"><div class="metric">4.5</div><h3 data-editable>体验评分</h3><p data-editable>用户觉得它好不好。评分高，不代表信息已经核实。</p></div>
+          <div class="trust-dimension reveal" style="--delay:170ms"><div class="metric">70%</div><h3 data-editable>数据可信度</h3><p data-editable>证据来源、独立确认人数和反对意见共同决定。</p></div>
+          <div class="trust-dimension reveal" style="--delay:260ms"><div class="metric">2D</div><h3 data-editable>信息新鲜度</h3><p data-editable>距离最近一次现场验证已经过去多久。</p></div>
+        </div>
+        <div class="trust-note reveal" style="--delay:360ms" data-editable>高评分 ≠ 高可信；旧信息也不能冒充实时状态。</div>
+      </section>
+
+      <!-- === SLIDE 14 / Q&A === -->
+      <section class="slide" aria-label="技术与离线兜底备份页">
+        <header class="slide-topline"><span class="section">Q&A / TECHNOLOGY</span><span class="page">14 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>现场断网，核心体验仍然可以运行</h2>
+        <div class="tech-stack">
+          <div class="tech-layer reveal" style="--delay:80ms"><strong>UI</strong><span data-editable>React 19 + TypeScript</span></div>
+          <div class="tech-layer reveal" style="--delay:150ms"><strong>MAP</strong><span data-editable>MapLibre GL + deck.gl</span></div>
+          <div class="tech-layer reveal" style="--delay:220ms"><strong>DATA</strong><span data-editable>本地 JSON · 离线优先</span></div>
+          <div class="tech-layer reveal" style="--delay:290ms"><strong>FALLBACK</strong><span data-editable>在线失败 → 上海概念地图</span></div>
+        </div>
+        <figure class="shot-frame offline-shot reveal-scale" style="--delay:150ms"><img src="fangbian-yixia-pitch-assets/map-fixed.png" alt="离线上海概念地图"></figure>
+        <div class="limitations" data-editable>已知边界：直线距离，不是精确导航 · 不声称实时排队 · 地图缺失字段继续显示待核实</div>
+      </section>
+
+      <!-- === SLIDE 15 / Q&A === -->
+      <section class="slide" aria-label="商业与安全边界备份页">
+        <header class="slide-topline"><span class="section">Q&A / SAFETY</span><span class="page">15 · 15</span></header>
+        <h2 class="slide-title reveal" data-editable>商业化和健康数据，都有不可突破的边界</h2>
+        <div class="boundaries">
+          <div class="boundary reveal" style="--delay:80ms"><span class="num">01 / PROMOTION</span><h3 data-editable>推广边界</h3><p data-editable>付费曝光必须明确标注，<strong>不改变紧急排序和真实评分。</strong></p></div>
+          <div class="boundary reveal" style="--delay:170ms"><span class="num">02 / PRIVACY</span><h3 data-editable>隐私边界</h3><p data-editable>不出售个人排泄记录；研究只使用<strong>自愿授权的匿名聚合数据。</strong></p></div>
+          <div class="boundary reveal" style="--delay:260ms"><span class="num">03 / MEDICAL</span><h3 data-editable>医疗边界</h3><p data-editable>AI 只做娱乐观察和安全提示，<strong>不做诊断。</strong></p></div>
+        </div>
+        <div class="final-boundary reveal" style="--delay:360ms" data-editable>可信不是一句口号，而是产品必须主动拒绝的三件事。</div>
+      </section>
+    </main>
+  </div>
+
+  <!-- === NAVIGATION CHROME === -->
+  <nav class="deck-controls" aria-label="幻灯片导航">
+    <button id="prevBtn" aria-label="上一页">‹</button>
+    <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="count" id="slideCount">01 / 15</span>
+    <button id="nextBtn" aria-label="下一页">›</button>
+  </nav>
+
+  <!-- === INLINE EDITING CHROME === -->
+  <div class="edit-hotzone" aria-hidden="true"></div>
+  <button class="edit-toggle" id="editToggle" title="编辑模式（E）" aria-label="切换编辑模式">✎</button>
+  <div class="edit-toolbar" id="editToolbar" aria-label="编辑工具栏">
+    <button id="saveHtml">保存 HTML</button>
+    <button id="resetEdits">重置文字</button>
+  </div>
+
+  <script>
+    /* === SLIDE PRESENTATION CONTROLLER === */
+    class SlidePresentation {
+      constructor() {
+        this.slides = [...document.querySelectorAll('.slide')];
+        this.stage = document.getElementById('deckStage');
+        this.counter = document.getElementById('slideCount');
+        this.progress = document.getElementById('progressFill');
+        this.currentSlide = this.getInitialSlide();
+        this.wheelLocked = false;
+        this.touchStartX = 0;
+        this.touchStartY = 0;
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupWheelNav();
+        this.setupButtons();
+        this.setupHashNav();
+        this.showSlide(this.currentSlide, false);
+      }
+
+      getInitialSlide() {
+        const params = new URLSearchParams(location.search);
+        if (params.get('capture') === '1') document.body.classList.add('capture');
+        const querySlide = Number(params.get('slide'));
+        const hashSlide = Number(location.hash.replace('#', ''));
+        const requested = querySlide || hashSlide || 1;
+        return Math.max(0, Math.min(requested - 1, this.slides.length - 1));
+      }
+
+      setupStageScale() {
+        const scale = () => {
+          const factor = Math.min(innerWidth / 1920, innerHeight / 1080);
+          const x = (innerWidth - 1920 * factor) / 2;
+          const y = (innerHeight - 1080 * factor) / 2;
+          this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        scale();
+        addEventListener('resize', scale);
+      }
+
+      setupKeyboardNav() {
+        addEventListener('keydown', (event) => {
+          const editingText = event.target?.getAttribute?.('contenteditable') === 'true';
+          if (editingText) return;
+          if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); this.next(); }
+          if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) { event.preventDefault(); this.prev(); }
+          if (event.key === 'Home') this.showSlide(0);
+          if (event.key === 'End') this.showSlide(this.slides.length - 1);
+          if (event.key === 'f' || event.key === 'F') this.toggleFullscreen();
+        });
+      }
+
+      setupTouchNav() {
+        addEventListener('touchstart', (event) => {
+          this.touchStartX = event.changedTouches[0].clientX;
+          this.touchStartY = event.changedTouches[0].clientY;
+        }, { passive: true });
+        addEventListener('touchend', (event) => {
+          const dx = event.changedTouches[0].clientX - this.touchStartX;
+          const dy = event.changedTouches[0].clientY - this.touchStartY;
+          if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)) dx < 0 ? this.next() : this.prev();
+        }, { passive: true });
+      }
+
+      setupWheelNav() {
+        addEventListener('wheel', (event) => {
+          if (this.wheelLocked || Math.abs(event.deltaY) < 18) return;
+          this.wheelLocked = true;
+          event.deltaY > 0 ? this.next() : this.prev();
+          setTimeout(() => { this.wheelLocked = false; }, 650);
+        }, { passive: true });
+      }
+
+      setupButtons() {
+        document.getElementById('prevBtn').addEventListener('click', () => this.prev());
+        document.getElementById('nextBtn').addEventListener('click', () => this.next());
+      }
+
+      setupHashNav() {
+        addEventListener('hashchange', () => {
+          const index = Number(location.hash.replace('#', '')) - 1;
+          if (Number.isFinite(index)) this.showSlide(index, false);
+        });
+      }
+
+      showSlide(index, updateHash = true) {
+        this.currentSlide = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.slides.forEach((slide, i) => {
+          slide.classList.toggle('active', i === this.currentSlide);
+          slide.classList.toggle('visible', i === this.currentSlide);
+          slide.setAttribute('aria-hidden', i === this.currentSlide ? 'false' : 'true');
+        });
+        const current = String(this.currentSlide + 1).padStart(2, '0');
+        this.counter.textContent = `${current} / ${this.slides.length}`;
+        this.progress.style.width = `${((this.currentSlide + 1) / this.slides.length) * 100}%`;
+        document.title = `方便一下 · ${current}/${this.slides.length}`;
+        if (updateHash && !document.body.classList.contains('capture')) history.replaceState(null, '', `#${this.currentSlide + 1}`);
+      }
+
+      next() { this.showSlide(this.currentSlide + 1); }
+      prev() { this.showSlide(this.currentSlide - 1); }
+      toggleFullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
+    }
+
+    /* === INLINE TEXT EDITOR === */
+    class InlineEditor {
+      constructor() {
+        this.storageKey = 'fangbian-yixia-pitch-edits-v1';
+        this.nodes = [...document.querySelectorAll('[data-editable]')];
+        this.isActive = false;
+        this.toggle = document.getElementById('editToggle');
+        this.toolbar = document.getElementById('editToolbar');
+        this.restore();
+        this.bind();
+      }
+
+      bind() {
+        this.toggle.addEventListener('click', () => this.toggleEditMode());
+        document.getElementById('saveHtml').addEventListener('click', () => this.downloadHTML());
+        document.getElementById('resetEdits').addEventListener('click', () => this.reset());
+        this.nodes.forEach((node, index) => node.addEventListener('input', () => this.persist(index, node.innerHTML)));
+      }
+
+      toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle('editing', this.isActive);
+        this.toggle.classList.toggle('active', this.isActive);
+        this.toolbar.classList.toggle('active', this.isActive);
+        this.nodes.forEach(node => node.setAttribute('contenteditable', this.isActive ? 'true' : 'false'));
+      }
+
+      persist(index, value) {
+        const edits = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+        edits[index] = value;
+        localStorage.setItem(this.storageKey, JSON.stringify(edits));
+      }
+
+      restore() {
+        const edits = JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+        Object.entries(edits).forEach(([index, value]) => { if (this.nodes[index]) this.nodes[index].innerHTML = value; });
+      }
+
+      reset() {
+        localStorage.removeItem(this.storageKey);
+        location.reload();
+      }
+
+      downloadHTML() {
+        const clone = document.documentElement.cloneNode(true);
+        clone.querySelectorAll('[contenteditable]').forEach(node => node.setAttribute('contenteditable', 'false'));
+        const blob = new Blob(['<!doctype html>\n' + clone.outerHTML], { type: 'text/html;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'fangbian-yixia-pitch-edited.html';
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+    }
+
+    /* === EDIT HOTZONE WITH GRACE PERIOD === */
+    const presentation = new SlidePresentation();
+    const editor = new InlineEditor();
+    const hotzone = document.querySelector('.edit-hotzone');
+    const editToggle = document.getElementById('editToggle');
+    let hideTimeout = null;
+    hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); editToggle.classList.add('show'); });
+    hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+    editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+    editToggle.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+    hotzone.addEventListener('click', () => editor.toggleEditMode());
+    addEventListener('keydown', (event) => {
+      const editingText = event.target?.getAttribute?.('contenteditable') === 'true';
+      if ((event.key === 'e' || event.key === 'E') && !editingText) editor.toggleEditMode();
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's' && editor.isActive) { event.preventDefault(); editor.downloadHTML(); }
+    });
+  </script>
+</body>
+</html>

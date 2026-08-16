@@ -724,6 +724,7 @@ function CommunityHubModal({
   const [scores, setScores] = useState<RatingScores>({ hygiene: 4, odor: 4, queue: 3, comfort: 4, wayfinding: 3, facilities: 4 });
   const [note, setNote] = useState("");
   const [claimText, setClaimText] = useState("");
+  const [newDescription, setNewDescription] = useState("");
   const [newName, setNewName] = useState("");
   const [newDistrict, setNewDistrict] = useState("");
   const [newAddress, setNewAddress] = useState("");
@@ -751,7 +752,7 @@ function CommunityHubModal({
         kind: "new_toilet",
         toiletId: null,
         toiletName: newName.trim(),
-        summary: claimText.trim() || `${newName.trim()}新厕所入库申请`,
+        summary: newDescription.trim() || `${newName.trim()}新厕所入库申请`,
         structuredData: {
           name: newName.trim(),
           district: newDistrict.trim() || null,
@@ -825,7 +826,7 @@ function CommunityHubModal({
             <label><span>地址或入口</span><input value={newAddress} onChange={(event) => setNewAddress(event.target.value)} placeholder="建筑、入口或附近地标" /></label>
             <div className="community-form-grid"><label><span>经度</span><input required inputMode="decimal" value={newLongitude} onChange={(event) => setNewLongitude(event.target.value)} /></label><label><span>纬度</span><input required inputMode="decimal" value={newLatitude} onChange={(event) => setNewLatitude(event.target.value)} /></label></div>
             <div className="community-form-grid"><label><span>楼层</span><input value={newFloor} onChange={(event) => setNewFloor(event.target.value)} placeholder="如 B1 / 5F" /></label><label><span>楼内方位</span><input value={newZone} onChange={(event) => setNewZone(event.target.value)} placeholder="如东南侧 / 近电梯" /></label></div>
-            <label><span>发现说明</span><textarea value={claimText} onChange={(event) => setClaimText(event.target.value)} placeholder="说明怎么找到、是否开放以及现场设施" /></label>
+            <label><span>发现说明</span><textarea value={newDescription} onChange={(event) => setNewDescription(event.target.value)} placeholder="说明怎么找到、是否开放以及现场设施" /></label>
             <p className="coordinate-warning"><CircleAlert size={13} /> 当前预填人民广场演示坐标；真实投稿必须使用现场位置。</p>
           </div> : null}
 

@@ -2123,9 +2123,22 @@ a {
   .topbar { position: relative; }
   .brand { min-width: 0; }
   .brand small { display: none; }
-  .top-actions { width: 100%; justify-content: stretch; overflow-x: auto; }
-  .top-actions button { flex: 0 0 auto; }
-  .header-button { font-size: 10px; }
+  .top-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    overflow: visible;
+  }
+  .top-actions button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    padding: 0 6px;
+    white-space: nowrap;
+  }
+  .status-button,
+  .header-button { font-size: 9px; }
   .dashboard-grid { display: block; }
   .left-rail { border-right: 0; }
   .control-section { padding: 17px; }
