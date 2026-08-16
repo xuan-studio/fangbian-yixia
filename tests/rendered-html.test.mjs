@@ -95,6 +95,10 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.doesNotMatch(dashboard, /dark-matter-gl-style\/style\.json/);
   assert.doesNotMatch(dashboard, /map\.on\("error", failOnline\)/);
   assert.doesNotMatch(dashboard, /transitions:\s*\{\s*getElevation/);
+  assert.doesNotMatch(dashboard, /ColumnLayer/);
+  assert.match(dashboard, /function markerRadiusForZoom/);
+  assert.match(dashboard, /id: "toilet-markers"[\s\S]*radiusUnits: "pixels"/);
+  assert.match(dashboard, /map\.on\("zoom", syncZoom\)/);
   assert.match(styles, /\.map-frame \.map-canvas\s*\{[^}]*height:\s*100%/s);
   assert.equal(candidates.status, "pending_verification");
   assert.ok(candidates.sourcePosts.length >= 10);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ColumnLayer, GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import type { PickingInfo } from "@deck.gl/core";
 import * as maplibregl from "maplibre-gl";
@@ -89,6 +89,7 @@ type CommunityHubTab = "contribute" | "verify" | "history";
 type ContributionKind = "rating" | "fact_update" | "status_report" | "new_toilet";
 
 const SHANGHAI_CENTER: [number, number] = [121.4737, 31.2304];
+const MARKER_SURFACE_ALTITUDE = 52;
 const MAP_VISUAL_THEME: VisualTheme = "light";
 function makeOnlineStyle(theme: VisualTheme): StyleSpecification {
   const tileTheme = theme === "light" ? "light_all" : "dark_all";
@@ -359,14 +360,21 @@ function freshnessLabel(updatedAt: string | null) {
   return updatedAt;
 }
 
+function markerRadiusForZoom(zoom: number) {
+  const progress = Math.max(0, Math.min(1, (zoom - 7.6) / (17 - 7.6)));
+  return 4.2 + Math.pow(progress, 0.72) * 5.8;
+}
+
 function makeLayers(
   records: ToiletRecord[],
   boundary: BoundaryData | null,
   selectedId: string | null,
   mode: MapMode,
   theme: VisualTheme,
+  zoom: number,
 ) {
   const selected = records.find((record) => record.id === selectedId);
+  const markerRadius = markerRadiusForZoom(zoom);
   const layers = [
     boundary
       ? new GeoJsonLayer({
@@ -386,33 +394,31 @@ function makeLayers(
         })
       : null,
     new ScatterplotLayer<ToiletRecord>({
-      id: "toilet-footprints",
+      id: "toilet-marker-glow",
       data: records,
-      getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude],
-      getRadius: theme === "light" ? 285 : 240,
-      radiusUnits: "meters",
+      getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude, MARKER_SURFACE_ALTITUDE],
+      getRadius: (record) => markerRadius + (record.id === selectedId ? 7 : 3.2),
+      radiusUnits: "pixels",
+      radiusMinPixels: 6,
+      radiusMaxPixels: 19,
       getFillColor: (record) => {
-        if (record.sourceType === "premium_xhs") return [245, 168, 36, theme === "light" ? 54 : 34];
-        if (record.sourceType === "user_import") return [154, 127, 240, theme === "light" ? 62 : 40];
-        if (record.open24h === true) return theme === "light" ? [255, 99, 71, 58] : [190, 255, 61, 34];
-        return theme === "light" ? [0, 146, 162, 38] : [66, 221, 238, 28];
+        if (record.sourceType === "premium_xhs") return [245, 168, 36, theme === "light" ? 48 : 38];
+        if (record.sourceType === "user_import") return [154, 127, 240, theme === "light" ? 54 : 42];
+        if (record.open24h === true) return theme === "light" ? [255, 99, 71, 50] : [190, 255, 61, 38];
+        return theme === "light" ? [0, 146, 162, 44] : [66, 221, 238, 34];
       },
       stroked: false,
       filled: true,
       pickable: false,
     }),
-    new ColumnLayer<ToiletRecord>({
-      id: "toilet-columns",
+    new ScatterplotLayer<ToiletRecord>({
+      id: "toilet-markers",
       data: records,
-      diskResolution: 6,
-      radius: theme === "light" ? 210 : 175,
-      extruded: true,
-      elevationScale: 1,
-      getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude],
-      getElevation: (record) =>
-        record.id === selectedId
-          ? 1450
-          : 240 + (record.confidence ?? 0.45) * 760 + (record.rating ?? 0) * 90,
+      getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude, MARKER_SURFACE_ALTITUDE],
+      getRadius: (record) => markerRadius + (record.id === selectedId ? 2.4 : 0),
+      radiusUnits: "pixels",
+      radiusMinPixels: 4,
+      radiusMaxPixels: 13,
       getFillColor: (record) => {
         if (record.sourceType === "premium_xhs") return [245, 168, 36, 238];
         if (record.sourceType === "user_import") return [154, 127, 240, 232];
@@ -422,23 +428,20 @@ function makeLayers(
       getLineColor: theme === "light" ? [255, 255, 255, 190] : [240, 255, 253, 120],
       lineWidthMinPixels: 1,
       stroked: true,
+      filled: true,
       pickable: true,
       autoHighlight: true,
       highlightColor: [255, 255, 255, 120],
-      material: {
-        ambient: 0.45,
-        diffuse: 0.75,
-        shininess: 70,
-        specularColor: [140, 255, 245],
-      },
     }),
     selected
       ? new ScatterplotLayer<ToiletRecord>({
           id: "selected-halo",
           data: [selected],
-          getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude],
-          getRadius: 620,
-          radiusUnits: "meters",
+          getPosition: (record) => [record.coordinates.longitude, record.coordinates.latitude, MARKER_SURFACE_ALTITUDE],
+          getRadius: markerRadius + 10,
+          radiusUnits: "pixels",
+          radiusMinPixels: 14,
+          radiusMaxPixels: 23,
           getFillColor: [255, 255, 255, 12],
           getLineColor: [255, 255, 255, 235],
           lineWidthMinPixels: 2,
@@ -448,7 +451,7 @@ function makeLayers(
         })
       : null,
   ];
-  return layers.filter(Boolean) as Array<GeoJsonLayer | ColumnLayer<ToiletRecord> | ScatterplotLayer<ToiletRecord>>;
+  return layers.filter(Boolean) as Array<GeoJsonLayer | ScatterplotLayer<ToiletRecord>>;
 }
 
 function ToiletMap({
@@ -471,6 +474,7 @@ function ToiletMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
+  const [mapZoom, setMapZoom] = useState(9.1);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -512,6 +516,16 @@ function ToiletMap({
     mapRef.current = map;
     overlayRef.current = overlay;
 
+    let zoomFrame: number | null = null;
+    const syncZoom = () => {
+      if (zoomFrame !== null) window.cancelAnimationFrame(zoomFrame);
+      zoomFrame = window.requestAnimationFrame(() => {
+        zoomFrame = null;
+        setMapZoom(map.getZoom());
+      });
+    };
+    map.on("zoom", syncZoom);
+
     map.on("load", () => {
       map.addControl(overlay as unknown as IControl);
       map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "bottom-right");
@@ -530,6 +544,8 @@ function ToiletMap({
 
     return () => {
       window.clearTimeout(styleTimer);
+      map.off("zoom", syncZoom);
+      if (zoomFrame !== null) window.cancelAnimationFrame(zoomFrame);
       overlayRef.current = null;
       mapRef.current = null;
       map.remove();
@@ -538,12 +554,12 @@ function ToiletMap({
 
   useEffect(() => {
     overlayRef.current?.setProps({
-      layers: makeLayers(records, boundary, selectedId, mode, theme),
+      layers: makeLayers(records, boundary, selectedId, mode, theme, mapZoom),
       onClick: (info: PickingInfo<ToiletRecord>) => {
         if (info.object) onSelect(info.object);
       },
     });
-  }, [records, boundary, selectedId, mode, theme, onSelect]);
+  }, [records, boundary, selectedId, mode, theme, mapZoom, onSelect]);
 
   return <div className="map-canvas" ref={containerRef} aria-label="上海公共厕所 3D 地图" />;
 }
