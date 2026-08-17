@@ -1431,9 +1431,9 @@ export function Dashboard() {
     setMapNotice("在线底图加载失败，已自动切换离线上海概念图");
   }, []);
 
-  const handleAmapFailure = useCallback((reason: string) => {
+  const handleAmapFailure = useCallback(() => {
     setAmapDisabled(true);
-    setMapNotice(`高德 3D 地图暂不可用，已切回通用在线底图（${reason}）`);
+    setMapNotice("高德 3D 地图暂不可用，已切回通用在线底图");
   }, []);
 
   const useAmap = mapMode === "online" && mapConfig.provider === "amap" && Boolean(mapConfig.amapKey) && !amapDisabled;
