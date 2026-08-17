@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/xuan-studio/fangbian-yixia/actions/workflows/ci.yml/badge.svg)](https://github.com/xuan-studio/fangbian-yixia/actions/workflows/ci.yml)
 [![MIT License](https://img.shields.io/badge/code-MIT-c8ff3d.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/live-demo-20c7b5.svg)](https://fangbian-yixia-shanghai.xuan13ie.chatgpt.site/)
+[![Live Demo](https://img.shields.io/badge/live-demo-20c7b5.svg)](https://lala.w3xuan.xyz/)
 
 「方便一下」是一个 AI 结构化、社区多人验证驱动的上海厕所 3D 情报地图。公开地图告诉你“在哪里”，榜单线索告诉你“好不好”，用户现场反馈告诉你“现在能不能用”。真正着急时，系统会通过四级降级持续给出下一步，而不是假装数据永远完整。
 
@@ -12,16 +12,16 @@
 
 ## 在线体验
 
-- [打开产品](https://fangbian-yixia-shanghai.xuan13ie.chatgpt.site/)
-- [查看 15 页交互路演](https://fangbian-yixia-shanghai.xuan13ie.chatgpt.site/slides/)
+- [打开产品](https://lala.w3xuan.xyz/)
+- [查看 15 页交互路演](https://lala.w3xuan.xyz/slides/)
 
-[![方便一下路演动画预览](public/slides/preview.gif)](https://fangbian-yixia-shanghai.xuan13ie.chatgpt.site/slides/)
+[![方便一下路演动画预览](public/slides/preview.gif)](https://lala.w3xuan.xyz/slides/)
 
 ## 为什么不是普通厕所点评榜
 
 - **941 个公开厕所点**：OpenStreetMap 上海数据，本地缓存并保留 ODbL 署名。
 - **12 个优质场所线索**：平台证据、Mock 演示评论与用户评论分层，不生成无来源评分。
-- **3D 城市地图**：MapLibre + deck.gl；在线底图失败时自动降级为离线概念地图。
+- **3D 城市地图**：配置后优先使用高德 Web JS API 2.0 的 3D 建筑底图；厕所点继续聚合显示，坐标自动转换为 GCJ‑02。高德不可用时回退 MapLibre + deck.gl，再失败则降级为离线概念地图。
 - **四级紧急找厕**：从可信近厕逐步放宽条件，最后提供线下求助方案。
 - **社区共建闭环**：评论由 AI 提取楼层、方位、设施和状态，经过 3 位独立用户确认后上线。
 - **可信度分层**：体验评分、数据可信度和信息新鲜度独立展示。
@@ -50,6 +50,16 @@ npm run dev
 
 打开 `http://localhost:3000/`。首次启动不需要账号、数据库或 API Key。
 
+### 可选：启用高德 3D 底图
+
+在高德开放平台申请“Web 端（JS API）”Key 和安全密钥 `securityJsCode`，复制示例配置：
+
+```bash
+cp .env.example .env.local
+```
+
+在 `.env.local` 中填写 `AMAP_JS_KEY` 与 `AMAP_SECURITY_JS_CODE`，重新启动开发服务。安全密钥只由服务端代理使用；不要把 `.env.local`、Key 或安全密钥提交到 GitHub。没有配置时，项目会自动使用原有 MapLibre 地图。
+
 验收：
 
 ```bash
@@ -76,6 +86,7 @@ npm test
 | 路径 | 用途 |
 | --- | --- |
 | `app/Dashboard.tsx` | 地图、筛选、紧急推荐、评论、健康与共建中心 |
+| `worker/index.ts` | 高德地图运行配置与安全代理、Slides 路由和站点入口 |
 | `app/types.ts` | 数据契约和社区验证类型 |
 | `public/data/` | 离线优先的公开点、榜单和候选数据 |
 | `public/slides/` | 可在线或离线打开的路演分享版 |

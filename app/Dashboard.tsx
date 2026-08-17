@@ -80,6 +80,41 @@ type BoundaryData = {
 
 type MapMode = "online" | "offline";
 type VisualTheme = "light" | "dark";
+type MapConfig = { provider: "amap" | "maplibre"; amapKey: string | null };
+
+type AMapLngLat = { getLng(): number; getLat(): number };
+type AMapBounds = { getSouthWest(): AMapLngLat; getNorthEast(): AMapLngLat };
+type AMapMarker = object;
+type AMapInstance = {
+  add(item: object | object[]): void;
+  addControl(item: object): void;
+  remove(item: object | object[]): void;
+  destroy(): void;
+  getZoom(): number;
+  getBounds(): AMapBounds;
+  on(event: string, handler: () => void): void;
+  off(event: string, handler: () => void): void;
+  setZoomAndCenter(zoom: number, center: [number, number], immediately?: boolean): void;
+};
+type AMapNamespace = {
+  Map: new (container: HTMLDivElement, options: Record<string, unknown>) => AMapInstance;
+  Marker: new (options: Record<string, unknown>) => AMapMarker;
+  Buildings: new (options: Record<string, unknown>) => object;
+  Scale: new (options?: Record<string, unknown>) => object;
+  ToolBar: new (options?: Record<string, unknown>) => object;
+  convertFrom(
+    coordinates: Array<[number, number]>,
+    source: "gps",
+    callback: (status: string, result: { locations?: AMapLngLat[] }) => void,
+  ): void;
+};
+
+declare global {
+  interface Window {
+    AMap?: AMapNamespace;
+    _AMapSecurityConfig?: { serviceHost: string };
+  }
+}
 
 type FilterState = {
   query: string;
@@ -99,6 +134,8 @@ type ContributionKind = "rating" | "fact_update" | "status_report" | "new_toilet
 const SHANGHAI_CENTER: [number, number] = [121.4737, 31.2304];
 const SHANGHAI_BBOX: [number, number, number, number] = [120.8, 30.65, 122.15, 31.9];
 const MARKER_SURFACE_ALTITUDE = 52;
+let amapLoaderPromise: Promise<AMapNamespace> | null = null;
+const amapCoordinateCache = new Map<string, [number, number]>();
 
 type ClusterPointProperties = { record: ToiletRecord };
 type ClusterSummary = { open24hCount: number };
@@ -460,6 +497,41 @@ function clusterIconDataUri(cluster: ToiletClusterDatum, theme: VisualTheme) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
+function loadAmap(key: string) {
+  if (window.AMap) return Promise.resolve(window.AMap);
+  if (amapLoaderPromise) return amapLoaderPromise;
+  window._AMapSecurityConfig = { serviceHost: `${window.location.origin}/_AMapService` };
+  amapLoaderPromise = new Promise<AMapNamespace>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(key)}&plugin=AMap.Scale,AMap.ToolBar`;
+    script.async = true;
+    script.onload = () => window.AMap ? resolve(window.AMap) : reject(new Error("高德地图脚本未初始化"));
+    script.onerror = () => {
+      script.remove();
+      reject(new Error("高德地图脚本加载失败"));
+    };
+    document.head.appendChild(script);
+  });
+  amapLoaderPromise.catch(() => { amapLoaderPromise = null; });
+  return amapLoaderPromise;
+}
+
+function coordinateKey(longitude: number, latitude: number) {
+  return `${longitude.toFixed(6)},${latitude.toFixed(6)}`;
+}
+
+function convertAmapBatch(amap: AMapNamespace, coordinates: Array<[number, number]>) {
+  return new Promise<Array<[number, number]>>((resolve, reject) => {
+    amap.convertFrom(coordinates, "gps", (status, result) => {
+      if (status !== "complete" || !result.locations || result.locations.length !== coordinates.length) {
+        reject(new Error("厕所坐标转换失败"));
+        return;
+      }
+      resolve(result.locations.map((location) => [location.getLng(), location.getLat()]));
+    });
+  });
+}
+
 function makeLayers(
   records: ToiletRecord[],
   clusters: ToiletClusterDatum[],
@@ -698,6 +770,180 @@ function ToiletMap({
   }, [pinRecords, clusters, clusterIndex, boundary, selectedId, mode, theme, mapZoom, onSelect]);
 
   return <div className="map-canvas" ref={containerRef} aria-label="上海公共厕所 3D 地图" />;
+}
+
+function AmapToiletMap({
+  records,
+  selectedId,
+  amapKey,
+  onSelect,
+  onFailure,
+}: {
+  records: ToiletRecord[];
+  selectedId: string | null;
+  amapKey: string;
+  onSelect: (record: ToiletRecord) => void;
+  onFailure: () => void;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<AMapInstance | null>(null);
+  const amapRef = useRef<AMapNamespace | null>(null);
+  const markersRef = useRef<AMapMarker[]>([]);
+  const [convertedCoordinates, setConvertedCoordinates] = useState<Map<string, [number, number]>>(new Map());
+  const [mapEpoch, setMapEpoch] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    loadAmap(amapKey)
+      .then(async (amap) => {
+        const missing = records.filter((record) => !amapCoordinateCache.has(coordinateKey(record.coordinates.longitude, record.coordinates.latitude)));
+        for (let index = 0; index < missing.length; index += 40) {
+          const batch = missing.slice(index, index + 40);
+          const sourceCoordinates = batch.map((record): [number, number] => [record.coordinates.longitude, record.coordinates.latitude]);
+          const converted = await convertAmapBatch(amap, sourceCoordinates);
+          batch.forEach((record, itemIndex) => {
+            amapCoordinateCache.set(coordinateKey(record.coordinates.longitude, record.coordinates.latitude), converted[itemIndex]);
+          });
+        }
+        if (!active) return;
+        setConvertedCoordinates(new Map(records.flatMap((record) => {
+          const converted = amapCoordinateCache.get(coordinateKey(record.coordinates.longitude, record.coordinates.latitude));
+          return converted ? [[record.id, converted] as const] : [];
+        })));
+      })
+      .catch(() => active && onFailure());
+    return () => { active = false; };
+  }, [amapKey, records, onFailure]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    let active = true;
+    let map: AMapInstance | null = null;
+    loadAmap(amapKey)
+      .then((amap) => {
+        if (!active || !containerRef.current) return;
+        map = new amap.Map(containerRef.current, {
+          viewMode: "3D",
+          center: SHANGHAI_CENTER,
+          zoom: 10.1,
+          pitch: window.matchMedia("(max-width: 760px)").matches ? 38 : 52,
+          rotation: -18,
+          mapStyle: "amap://styles/whitesmoke",
+          features: ["bg", "road", "building", "point"],
+          showLabel: true,
+          showIndoorMap: true,
+          resizeEnable: true,
+          zooms: [7.6, 19],
+        });
+        map.add(new amap.Buildings({ zooms: [14, 19], zIndex: 12, heightFactor: 1 }));
+        map.addControl(new amap.Scale());
+        map.addControl(new amap.ToolBar({ position: "RB", liteStyle: true }));
+        const refresh = () => setMapEpoch((current) => current + 1);
+        map.on("zoomend", refresh);
+        map.on("moveend", refresh);
+        mapRef.current = map;
+        amapRef.current = amap;
+        setMapEpoch((current) => current + 1);
+      })
+      .catch(() => active && onFailure());
+    return () => {
+      active = false;
+      if (map) map.destroy();
+      markersRef.current = [];
+      mapRef.current = null;
+      amapRef.current = null;
+    };
+  }, [amapKey, onFailure]);
+
+  const clusterIndex = useMemo(() => {
+    const index = new Supercluster<ClusterPointProperties, ClusterSummary>({
+      radius: 58,
+      maxZoom: 15,
+      minPoints: 3,
+      map: (properties) => ({ open24hCount: properties.record.open24h === true ? 1 : 0 }),
+      reduce: (summary, properties) => { summary.open24hCount += properties.open24hCount; },
+    });
+    index.load(records.flatMap((record) => {
+      if (record.id === selectedId || record.sourceType !== "public_open_data") return [];
+      const coordinates = convertedCoordinates.get(record.id);
+      if (!coordinates) return [];
+      return [{
+        type: "Feature" as const,
+        properties: { record },
+        geometry: { type: "Point" as const, coordinates },
+      }];
+    }));
+    return index;
+  }, [convertedCoordinates, records, selectedId]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const amap = amapRef.current;
+    if (!map || !amap || convertedCoordinates.size === 0) return;
+    if (markersRef.current.length) map.remove(markersRef.current);
+
+    const zoom = map.getZoom();
+    const bounds = map.getBounds();
+    const southWest = bounds.getSouthWest();
+    const northEast = bounds.getNorthEast();
+    const bbox: [number, number, number, number] = [southWest.getLng(), southWest.getLat(), northEast.getLng(), northEast.getLat()];
+    const visible = clusterIndex.getClusters(bbox, Math.floor(zoom));
+    const nextMarkers: AMapMarker[] = [];
+
+    for (const feature of visible) {
+      if ("cluster" in feature.properties && feature.properties.cluster === true) {
+        const content = document.createElement("button");
+        content.type = "button";
+        content.className = `amap-cluster-marker${feature.properties.open24hCount > 0 ? " has-24h" : ""}`;
+        content.textContent = String(feature.properties.point_count_abbreviated);
+        content.title = `${feature.properties.point_count} 个厕所，点击展开`;
+        content.setAttribute("aria-label", content.title);
+        const coordinates = feature.geometry.coordinates as [number, number];
+        content.addEventListener("click", () => {
+          map.setZoomAndCenter(Math.min(clusterIndex.getClusterExpansionZoom(feature.properties.cluster_id), 18), coordinates, false);
+        });
+        nextMarkers.push(new amap.Marker({ position: coordinates, content, anchor: "bottom-center", zIndex: 80 }));
+      } else if ("record" in feature.properties) {
+        const record = feature.properties.record;
+        const coordinates = feature.geometry.coordinates as [number, number];
+        const content = document.createElement("button");
+        content.type = "button";
+        content.className = `amap-toilet-pin${record.open24h === true ? " is-24h" : ""}`;
+        content.title = record.name;
+        content.setAttribute("aria-label", `选择 ${record.name}`);
+        content.style.setProperty("--pin-size", `${markerSizeForZoom(zoom)}px`);
+        content.addEventListener("click", () => onSelect(record));
+        nextMarkers.push(new amap.Marker({ position: coordinates, content, anchor: "bottom-center", zIndex: 90 }));
+      }
+    }
+
+    for (const record of records.filter((item) => item.id === selectedId || item.sourceType !== "public_open_data")) {
+      const coordinates = convertedCoordinates.get(record.id);
+      if (!coordinates) continue;
+      const content = document.createElement("button");
+      content.type = "button";
+      content.className = [
+        "amap-toilet-pin",
+        record.id === selectedId ? "is-selected" : "",
+        record.sourceType === "premium_xhs" ? "is-premium" : "",
+        record.sourceType === "user_import" ? "is-community" : "",
+        record.open24h === true ? "is-24h" : "",
+      ].filter(Boolean).join(" ");
+      content.title = `${record.name} · ${record.district ?? "区域待核实"}`;
+      content.setAttribute("aria-label", `选择 ${record.name}`);
+      content.style.setProperty("--pin-size", `${markerSizeForZoom(zoom) + (record.id === selectedId ? 6 : 0)}px`);
+      content.addEventListener("click", () => onSelect(record));
+      nextMarkers.push(new amap.Marker({ position: coordinates, content, anchor: "bottom-center", zIndex: record.id === selectedId ? 130 : 100 }));
+    }
+
+    markersRef.current = nextMarkers;
+    if (nextMarkers.length) map.add(nextMarkers);
+    return () => {
+      if (mapRef.current && nextMarkers.length) mapRef.current.remove(nextMarkers);
+    };
+  }, [clusterIndex, convertedCoordinates, mapEpoch, onSelect, records, selectedId]);
+
+  return <div className="map-canvas amap-map-canvas" ref={containerRef} aria-label="上海公共厕所高德 3D 地图" />;
 }
 
 function HealthModal({
@@ -1005,6 +1251,8 @@ export function Dashboard() {
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("online");
+  const [mapConfig, setMapConfig] = useState<MapConfig>({ provider: "maplibre", amapKey: null });
+  const [amapDisabled, setAmapDisabled] = useState(false);
   const [visualTheme, setVisualTheme] = useState<VisualTheme>("dark");
   const [mapNotice, setMapNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1034,6 +1282,13 @@ export function Dashboard() {
   const [locationDirections, setLocationDirections] = useState("");
   const [importNotice, setImportNotice] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    fetch("/api/map-config", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() as Promise<MapConfig> : Promise.reject())
+      .then((config) => setMapConfig(config))
+      .catch(() => setMapConfig({ provider: "maplibre", amapKey: null }));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -1166,6 +1421,13 @@ export function Dashboard() {
     setMapMode("offline");
     setMapNotice("在线底图加载失败，已自动切换离线上海概念图");
   }, []);
+
+  const handleAmapFailure = useCallback(() => {
+    setAmapDisabled(true);
+    setMapNotice("高德 3D 地图暂不可用，已切回通用在线底图");
+  }, []);
+
+  const useAmap = mapMode === "online" && mapConfig.provider === "amap" && Boolean(mapConfig.amapKey) && !amapDisabled;
 
   const handleSelect = useCallback((record: ToiletRecord) => {
     setSelectedId(record.id);
@@ -1424,9 +1686,16 @@ export function Dashboard() {
           <button className="status-button theme-button" onClick={() => setVisualTheme((current) => current === "light" ? "dark" : "light")} aria-label={`切换为${visualTheme === "light" ? "暗色" : "亮色"}模式`}>
             {visualTheme === "light" ? <Sun size={15} /> : <Moon size={15} />} {visualTheme === "light" ? "亮色" : "暗色"}
           </button>
-          <button className={`status-button map-mode-button ${mapMode === "offline" ? "is-offline" : ""}`} onClick={() => setMapMode((current) => current === "online" ? "offline" : "online")}>
+          <button className={`status-button map-mode-button ${mapMode === "offline" ? "is-offline" : ""}`} onClick={() => {
+            if (mapMode === "offline") {
+              setAmapDisabled(false);
+              setMapMode("online");
+            } else {
+              setMapMode("offline");
+            }
+          }}>
             {mapMode === "online" ? <Wifi size={15} /> : <WifiOff size={15} />}
-            {mapMode === "online" ? "在线底图" : "离线概念图"}
+            {mapMode === "online" ? useAmap ? "高德 3D" : "在线底图" : "离线概念图"}
           </button>
           <button className="header-button community-button" onClick={() => openCommunityHub("contribute")}><Users size={16} /> 我要共建</button>
           <button className="header-button" onClick={() => openCommunityHub("verify")}><ListChecks size={16} /> 验证中心 <span className="header-count">{locationCandidates.filter((item) => item.status === "collecting").length + communityClaims.filter((item) => item.status === "collecting").length}</span></button>
@@ -1505,7 +1774,9 @@ export function Dashboard() {
           <div className="map-frame">
             {loading && <div className="map-loading"><Radar size={24} /><span>正在展开上海厕所情报网…</span></div>}
             {loadError && <div className="map-error"><CircleAlert size={20} /><div><strong>数据暂未载入</strong><p>{loadError}</p></div></div>}
-            <ToiletMap records={filteredRecords} boundary={boundary} selectedId={visibleSelectedId} mode={mapMode} theme={MAP_VISUAL_THEME} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />
+            {useAmap && mapConfig.amapKey
+              ? <AmapToiletMap records={filteredRecords} selectedId={visibleSelectedId} amapKey={mapConfig.amapKey} onSelect={handleSelect} onFailure={handleAmapFailure} />
+              : <ToiletMap records={filteredRecords} boundary={boundary} selectedId={visibleSelectedId} mode={mapMode} theme={MAP_VISUAL_THEME} onSelect={handleSelect} onOnlineFailure={handleMapFailure} />}
             <div className="map-scanlines" aria-hidden="true" />
             <div className="map-location"><MapPin size={14} /><span>{locationLabel}</span><button onClick={locateUser} aria-label="获取我的位置" title="获取我的位置"><LocateFixed size={15} /></button></div>
             {mapNotice && <div className="map-notice"><CircleCheck size={15} /> {mapNotice}<button aria-label="关闭提示" title="关闭" onClick={() => setMapNotice(null)}><X size={14} /></button></div>}
@@ -1525,7 +1796,7 @@ export function Dashboard() {
               </div>
             )}
             <div className="map-legend"><span><i className="dot-cluster" />聚合数量</span><span><i className="dot-lime" />24 小时</span><span><i className="dot-cyan" />公开数据</span><span><i className="dot-gold" />优质榜单</span><span><i className="dot-community" />社区上线</span></div>
-            <div className="map-attribution">© OpenStreetMap contributors · 离线轮廓为概念可视化</div>
+            <div className="map-attribution">{useAmap ? "© 高德地图 · OSM 厕所点位已转换至 GCJ-02" : "© OpenStreetMap contributors · 离线轮廓为概念可视化"}</div>
           </div>
         </section>
 

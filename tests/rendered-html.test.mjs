@@ -117,6 +117,12 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.match(dashboard, /id: "toilet-location-pins"[\s\S]*sizeUnits: "pixels"/);
   assert.match(dashboard, /url: "\/assets\/toilet-pin\.png"/);
   assert.match(dashboard, /map\.on\("zoom", syncZoom\)/);
+  assert.match(dashboard, /function AmapToiletMap/);
+  assert.match(dashboard, /viewMode: "3D"/);
+  assert.match(dashboard, /amap\.convertFrom\(coordinates, "gps"/);
+  assert.match(dashboard, /高德 3D 地图暂不可用，已切回通用在线底图/);
+  assert.match(styles, /\.amap-toilet-pin/);
+  assert.match(styles, /\.amap-cluster-marker/);
   assert.match(styles, /\.map-frame \.map-canvas\s*\{[^}]*height:\s*100%/s);
   assert.match(styles, /\.map-stage-actions/);
   assert.equal(candidates.status, "pending_verification");
@@ -133,6 +139,9 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.match(aiGuide, /npm ci/);
   assert.match(worker, /url\.pathname === "\/slides"/);
   assert.match(worker, /\/slides\/index\.html/);
+  assert.match(worker, /url\.pathname === "\/api\/map-config"/);
+  assert.match(worker, /url\.pathname\.startsWith\("\/_AMapService\/"\)/);
+  assert.match(worker, /AMAP_SECURITY_JS_CODE/);
   assert.doesNotMatch(readme + aiGuide, /\/Users\//);
   await access(new URL("public/slides/preview.gif", root));
   await access(new URL("public/assets/toilet-pin.png", root));

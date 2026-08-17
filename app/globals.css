@@ -694,6 +694,62 @@ a {
   height: 100%;
 }
 
+.amap-map-canvas {
+  background: #e8ece9;
+}
+
+.amap-toilet-pin {
+  --pin-size: 20px;
+  width: var(--pin-size);
+  height: calc(var(--pin-size) * 1.24);
+  padding: 0;
+  border: 0;
+  background: #0093a5;
+  -webkit-mask: url("/assets/toilet-pin.png") center / contain no-repeat;
+  mask: url("/assets/toilet-pin.png") center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(5, 26, 32, 0.34));
+  cursor: pointer;
+  transition: transform 150ms ease, filter 150ms ease;
+}
+
+.amap-toilet-pin:hover,
+.amap-toilet-pin:focus-visible {
+  transform: translateY(-2px) scale(1.08);
+  filter: drop-shadow(0 4px 4px rgba(5, 26, 32, 0.4));
+  outline: 0;
+}
+
+.amap-toilet-pin.is-24h { background: #ff654b; }
+.amap-toilet-pin.is-premium { background: #f2a526; }
+.amap-toilet-pin.is-community { background: #8f72e8; }
+.amap-toilet-pin.is-selected {
+  background: #c8ff3d;
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 5px rgba(112, 150, 20, 0.68));
+}
+
+.amap-cluster-marker {
+  min-width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  padding: 0 7px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: #007e8e;
+  box-shadow: 0 3px 8px rgba(14, 45, 52, 0.34);
+  color: #fff;
+  font: 700 12px/1 var(--font-mono);
+  cursor: pointer;
+}
+
+.amap-cluster-marker.has-24h { border-color: #ff6848; }
+.amap-cluster-marker:hover,
+.amap-cluster-marker:focus-visible { transform: translateY(-2px) scale(1.04); outline: 2px solid #c8ff3d; }
+
+.amap-map-canvas .amap-logo,
+.amap-map-canvas .amap-copyright { opacity: 0.72 !important; }
+
 .map-frame::before,
 .map-frame::after {
   content: "";
