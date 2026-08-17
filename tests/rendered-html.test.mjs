@@ -60,13 +60,14 @@ test("public and premium datasets preserve truthful status", async () => {
 });
 
 test("offline, import and open-source contracts are packaged", async () => {
-  const [serviceWorker, schema, template, dashboard, styles, candidates, types, slides, readme, aiGuide, worker] = await Promise.all([
+  const [serviceWorker, schema, template, dashboard, styles, candidates, tagTaxonomy, types, slides, readme, aiGuide, worker] = await Promise.all([
     readFile(new URL("public/sw.js", root), "utf8"),
     readFile(new URL("public/data/toilet-record.schema.json", root), "utf8"),
     readFile(new URL("public/data/premium-import-template.json", root), "utf8"),
     readFile(new URL("app/Dashboard.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
     readFile(new URL("public/data/xhs-candidates.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/toilet-tag-taxonomy.json", root), "utf8").then(JSON.parse),
     readFile(new URL("app/types.ts", root), "utf8"),
     readFile(new URL("public/slides/index.html", root), "utf8"),
     readFile(new URL("README.md", root), "utf8"),
@@ -76,12 +77,15 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.match(serviceWorker, /public-toilets\.json/);
   assert.match(serviceWorker, /premium-comment-seeds\.json/);
   assert.match(serviceWorker, /building-location-candidates\.json/);
+  assert.match(serviceWorker, /toilet-tag-taxonomy\.json/);
   assert.match(serviceWorker, /shanghai-boundary\.geojson/);
   assert.match(schema, /"title": "ToiletRecord"/);
   assert.match(template, /"records": \[\]/);
   assert.match(dashboard, /憋不住了/);
   assert.match(dashboard, /aria-controls="task-parameter-controls"/);
   assert.match(dashboard, /展开任务参数/);
+  assert.match(dashboard, /设施信号灯/);
+  assert.match(dashboard, /Mock 演示标签，不参与排序/);
   assert.match(dashboard, /未知 ≠ 没有/);
   assert.match(dashboard, /3 人确认后上线/);
   assert.match(dashboard, /模拟下一位用户确认/);
@@ -117,6 +121,10 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.equal(candidates.status, "pending_verification");
   assert.ok(candidates.sourcePosts.length >= 10);
   assert.ok(candidates.venueCandidates.every((candidate) => candidate.coordinates === null));
+  assert.equal(tagTaxonomy.status, "demo");
+  assert.ok(tagTaxonomy.definitions.length >= 12);
+  assert.ok(tagTaxonomy.mockAssignments.length >= 20);
+  assert.ok(tagTaxonomy.mockAssignments.every((assignment) => assignment.source === "mock" && assignment.status === "pending_verification"));
   assert.match(slides, /15 页交互路演/);
   assert.match(slides, /aria-label="紧急降级找厕"/);
   assert.match(readme, /让 AI 帮你在电脑上运行/);

@@ -66,6 +66,7 @@ npm test
 - 缺失事实必须使用 `null`，界面显示“待核实”；未知不能写成“没有”。
 - OpenStreetMap 未提供具体名称时，使用带来源编号的“无名公共厕所”占位名，并标记“名称待补充”，不得伪装成正式名称。
 - 平台证据、Mock 评论和现场评论必须保留来源类型。
+- 设施 Tag 词典与演示分配位于 [public/data/toilet-tag-taxonomy.json](public/data/toilet-tag-taxonomy.json)；绿色为已确认、金色为来源线索、紫色为 Mock 待验证，Mock 不参与紧急排序。
 - 新厕所和楼内位置先进入候选池；未验证内容不得进入正式紧急推荐。
 - 推广内容不得改变紧急模式的距离、开放状态和可用性排序。
 - 不提交 Cookie、Token、个人定位或个体健康记录。

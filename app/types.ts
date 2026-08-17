@@ -108,6 +108,41 @@ export type BuildingLocationDataset = {
   records: BuildingLocationCandidate[];
 };
 
+export type FacilityTagId =
+  | "open24h"
+  | "squat"
+  | "seated"
+  | "accessible"
+  | "thirdRestroom"
+  | "babyCare"
+  | "clean"
+  | "supplies"
+  | "privacy"
+  | "accessCode"
+  | "petFriendly"
+  | "designFriendly";
+
+export type FacilityTagDefinition = {
+  id: FacilityTagId;
+  label: string;
+  category: "availability" | "facility" | "experience" | "access" | "scenario";
+  description: string;
+};
+
+export type FacilityTagAssignment = {
+  toiletId: string;
+  tagIds: FacilityTagId[];
+  source: "mock";
+  status: "pending_verification";
+};
+
+export type FacilityTagDataset = {
+  status: "demo";
+  policy: string;
+  definitions: FacilityTagDefinition[];
+  mockAssignments: FacilityTagAssignment[];
+};
+
 export type RatingScores = {
   hygiene: number;
   odor: number;

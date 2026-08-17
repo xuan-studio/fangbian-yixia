@@ -28,6 +28,7 @@ import {
   HeartPulse,
   History,
   House,
+  KeyRound,
   Layers3,
   ListChecks,
   LocateFixed,
@@ -35,6 +36,8 @@ import {
   MessageSquare,
   Moon,
   Navigation,
+  PackageCheck,
+  PawPrint,
   Radar,
   Route,
   Search,
@@ -59,6 +62,9 @@ import type {
   CommentRecord,
   CommunityClaim,
   CommunityRating,
+  FacilityTagDataset,
+  FacilityTagDefinition,
+  FacilityTagId,
   PremiumDataset,
   PublicDataset,
   RatingScores,
@@ -104,9 +110,74 @@ type ToiletClusterDatum = {
   coordinates: [number, number];
 };
 type MapPickDatum = ToiletRecord | ToiletClusterDatum;
+type FacilitySignalState = "confirmed" | "source" | "mock" | "unavailable" | "unknown";
+type FacilitySignal = FacilityTagDefinition & { state: FacilitySignalState; tooltip: string };
 
 function isClusterDatum(value: MapPickDatum): value is ToiletClusterDatum {
   return "kind" in value && value.kind === "cluster";
+}
+
+const FACILITY_SIGNAL_ORDER: FacilityTagId[] = [
+  "open24h", "squat", "seated", "accessible", "thirdRestroom", "babyCare",
+  "clean", "supplies", "privacy", "accessCode", "petFriendly", "designFriendly",
+];
+
+function facilitySignalIcon(id: FacilityTagId) {
+  if (id === "open24h") return <Clock3 size={17} />;
+  if (id === "squat") return <span className="signal-glyph">蹲</span>;
+  if (id === "seated") return <span className="signal-glyph">坐</span>;
+  if (id === "accessible") return <Accessibility size={17} />;
+  if (id === "thirdRestroom") return <Users size={17} />;
+  if (id === "babyCare") return <Baby size={17} />;
+  if (id === "clean" || id === "designFriendly") return <Sparkles size={17} />;
+  if (id === "supplies") return <PackageCheck size={17} />;
+  if (id === "privacy") return <ShieldCheck size={17} />;
+  if (id === "accessCode") return <KeyRound size={17} />;
+  return <PawPrint size={17} />;
+}
+
+function buildFacilitySignals(record: ToiletRecord | null, dataset: FacilityTagDataset | null): FacilitySignal[] {
+  if (!record || !dataset) return [];
+  const mockTags = new Set(dataset.mockAssignments.find((assignment) => assignment.toiletId === record.id)?.tagIds ?? []);
+  const joinedTags = record.tags.join(" ");
+  const facilityFacts: Partial<Record<FacilityTagId, boolean | null>> = {
+    open24h: record.open24h,
+    squat: record.facility.squat,
+    seated: record.facility.seated,
+    accessible: record.facility.accessible,
+    thirdRestroom: record.facility.thirdRestroom,
+    babyCare: record.facility.babyCare,
+  };
+  const sourceSignals: Partial<Record<FacilityTagId, boolean>> = {
+    clean: /清洁|干净|整洁|卫生/.test(joinedTags),
+    supplies: /纸巾|洗手液|耗材|用品齐全/.test(joinedTags),
+    privacy: /私密|安静|隔间/.test(joinedTags),
+    accessCode: Boolean(record.sourceMetadata?.access && record.sourceMetadata.access !== "yes"),
+    petFriendly: /宠物友好|携宠/.test(joinedTags),
+    designFriendly: /设计|艺术|拍照|光线|主题|马赛克|穹顶/.test(joinedTags),
+  };
+  const definitions = new Map(dataset.definitions.map((definition) => [definition.id, definition]));
+  return FACILITY_SIGNAL_ORDER.flatMap((id) => {
+    const definition = definitions.get(id);
+    if (!definition) return [];
+    const fact = facilityFacts[id];
+    let state: FacilitySignalState = "unknown";
+    let evidence = "尚无信息，欢迎用户补充";
+    if (fact === true) {
+      state = "confirmed";
+      evidence = "公开数据或社区字段已确认";
+    } else if (fact === false) {
+      state = "unavailable";
+      evidence = "来源记录为不具备或不适用";
+    } else if (sourceSignals[id]) {
+      state = "source";
+      evidence = "来源文本中存在相关线索，仍待复核";
+    } else if (mockTags.has(id)) {
+      state = "mock";
+      evidence = "Mock 演示标签，不参与排序，等待用户验证";
+    }
+    return [{ ...definition, state, tooltip: `${definition.label}｜${definition.description}｜${evidence}` }];
+  });
 }
 const MAP_VISUAL_THEME: VisualTheme = "light";
 function makeOnlineStyle(theme: VisualTheme): StyleSpecification {
@@ -951,6 +1022,7 @@ export function Dashboard() {
   const [premiumStatus, setPremiumStatus] = useState<PremiumDataset["status"]>("pending_source");
   const [publicMeta, setPublicMeta] = useState<Pick<PublicDataset, "source" | "license" | "generatedAt"> | null>(null);
   const [boundary, setBoundary] = useState<BoundaryData | null>(null);
+  const [facilityTagDataset, setFacilityTagDataset] = useState<FacilityTagDataset | null>(null);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -1004,8 +1076,12 @@ export function Dashboard() {
         if (!response.ok) throw new Error("楼内位置候选读取失败");
         return response.json() as Promise<BuildingLocationDataset>;
       }),
+      fetch("/data/toilet-tag-taxonomy.json").then((response) => {
+        if (!response.ok) throw new Error("设施标签词典读取失败");
+        return response.json() as Promise<FacilityTagDataset>;
+      }),
     ])
-      .then(([publicData, premiumData, boundaryData, locationData]) => {
+      .then(([publicData, premiumData, boundaryData, locationData, facilityTags]) => {
         if (!active) return;
         setPublicRecords(publicData.records);
         setPremiumRecords(premiumData.records);
@@ -1013,6 +1089,7 @@ export function Dashboard() {
         setPublicMeta(publicData);
         setBoundary(boundaryData);
         setLocationCandidates(locationData.records.map(withConsensusStatus));
+        setFacilityTagDataset(facilityTags);
         setSelectedId(publicData.records[0]?.id ?? null);
       })
       .catch((error: unknown) => {
@@ -1086,6 +1163,11 @@ export function Dashboard() {
   const selected = useMemo(
     () => allRecords.find((record) => record.id === visibleSelectedId) ?? null,
     [allRecords, visibleSelectedId],
+  );
+
+  const selectedFacilitySignals = useMemo(
+    () => buildFacilitySignals(selected, facilityTagDataset),
+    [selected, facilityTagDataset],
   );
 
   const emergencyLevels = useMemo(() => {
@@ -1477,6 +1559,15 @@ export function Dashboard() {
                 <h2>{selected.name}</h2>
                 <p><MapPin size={14} /> {selected.address ?? `${selected.district ?? "区域"} · 具体地址待核实`}</p>
                 <div className="detail-badges"><span className={selected.open24h === true ? "is-open" : ""}><Clock3 size={13} /> {selected.open24h === true ? "24 小时" : selected.openingHours ?? "时间待核实"}</span><span><ShieldCheck size={13} /> 可信度 {selected.confidence === null ? "待核实" : `${Math.round(selected.confidence * 100)}%`}</span>{selected.nameStatus === "generated" || selected.nameStatus === "source_generic" ? <span><CircleAlert size={13} /> 名称待补充</span> : null}</div>
+                <div className="facility-signal-panel">
+                  <div className="facility-signal-heading"><span>设施信号灯</span><small>悬停查看状态与证据</small></div>
+                  <div className="facility-signal-bar" aria-label="厕所设施与体验标签">
+                    {selectedFacilitySignals.map((signal) => <button type="button" key={signal.id} className={`facility-signal state-${signal.state}`} aria-label={signal.tooltip} data-tooltip={signal.tooltip}>
+                      {facilitySignalIcon(signal.id)}<i />
+                    </button>)}
+                  </div>
+                  <div className="facility-signal-legend"><span><i className="confirmed" />已确认</span><span><i className="source" />来源线索</span><span><i className="mock" />Mock 待验证</span><span><i className="unknown" />未知</span></div>
+                </div>
                 {publishedIndoorLocation ? <div className={`published-indoor-location status-${publishedIndoorLocation.status}`}><Layers3 size={15} /><div><span>{publishedIndoorLocation.status === "published_demo" ? "演示上线位置" : "社区已上线位置"}</span><strong>{publishedIndoorLocation.floor} · {publishedIndoorLocation.zone}</strong></div></div> : null}
               </div>
 

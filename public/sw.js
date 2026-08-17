@@ -1,4 +1,4 @@
-const CACHE_NAME = "fangbian-yixia-v5";
+const CACHE_NAME = "fangbian-yixia-v6";
 const CORE_ASSETS = [
   "/",
   "/favicon.svg",
@@ -9,6 +9,7 @@ const CORE_ASSETS = [
   "/data/premium-matches.json",
   "/data/premium-comment-seeds.json",
   "/data/building-location-candidates.json",
+  "/data/toilet-tag-taxonomy.json",
   "/data/venue-pois.json",
   "/data/shanghai-boundary.geojson",
   "/data/toilet-record.schema.json",

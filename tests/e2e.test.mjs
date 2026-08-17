@@ -76,6 +76,10 @@ test("golden map, emergency and community flows remain usable", async () => {
 
   assert.equal(await page.locator(".data-stat-row").filter({ hasText: "公开厕所" }).locator("strong").innerText(), "941");
   assert.equal(await page.locator(".data-stat-row").filter({ hasText: "优质榜单" }).locator("strong").innerText(), "12");
+  assert.equal(await page.locator(".facility-signal").count(), 12, "单厕详情应展示完整设施信号灯");
+  assert.ok(await page.locator(".facility-signal.state-confirmed").count() >= 3, "公开字段应点亮已确认信号");
+  assert.equal(await page.locator(".facility-signal.state-mock").count(), 3, "首个演示点应清楚标出三项 Mock 标签");
+  assert.match(await page.locator(".facility-signal.state-mock").first().getAttribute("data-tooltip"), /Mock 演示标签/);
 
   await page.getByRole("button", { name: "展开任务参数", exact: true }).click();
   await page.getByRole("combobox", { name: "区域" }).selectOption({ label: "黄浦区" });
