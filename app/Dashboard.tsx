@@ -793,7 +793,7 @@ function AmapToiletMap({
   selectedId: string | null;
   amapKey: string;
   onSelect: (record: ToiletRecord) => void;
-  onFailure: () => void;
+  onFailure: (reason: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<AMapInstance | null>(null);
@@ -821,7 +821,7 @@ function AmapToiletMap({
           return converted ? [[record.id, converted] as const] : [];
         })));
       })
-      .catch(() => active && onFailure());
+      .catch((error: unknown) => active && onFailure(error instanceof Error ? `坐标转换：${error.message}` : "坐标转换失败"));
     return () => { active = false; };
   }, [amapKey, records, onFailure]);
 
@@ -855,7 +855,7 @@ function AmapToiletMap({
         amapRef.current = amap;
         setMapEpoch((current) => current + 1);
       })
-      .catch(() => active && onFailure());
+      .catch((error: unknown) => active && onFailure(error instanceof Error ? `地图初始化：${error.message}` : "地图初始化失败"));
     return () => {
       active = false;
       if (map) map.destroy();
@@ -1432,9 +1432,9 @@ export function Dashboard() {
     setMapNotice("在线底图加载失败，已自动切换离线上海概念图");
   }, []);
 
-  const handleAmapFailure = useCallback(() => {
+  const handleAmapFailure = useCallback((reason: string) => {
     setAmapDisabled(true);
-    setMapNotice("高德 3D 地图暂不可用，已切回通用在线底图");
+    setMapNotice(`高德 3D 地图暂不可用，已切回通用在线底图（${reason}）`);
   }, []);
 
   const useAmap = mapMode === "online" && mapConfig.provider === "amap" && Boolean(mapConfig.amapKey) && !amapDisabled;
