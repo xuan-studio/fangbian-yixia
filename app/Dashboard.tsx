@@ -99,14 +99,8 @@ type AMapInstance = {
 type AMapNamespace = {
   Map: new (container: HTMLDivElement, options: Record<string, unknown>) => AMapInstance;
   Marker: new (options: Record<string, unknown>) => AMapMarker;
-  Buildings: new (options: Record<string, unknown>) => object;
   Scale: new (options?: Record<string, unknown>) => object;
   ToolBar: new (options?: Record<string, unknown>) => object;
-  convertFrom(
-    coordinates: Array<[number, number]>,
-    source: "gps",
-    callback: (status: string, result: { locations?: AMapLngLat[] }) => void,
-  ): void;
 };
 
 declare global {
@@ -530,16 +524,33 @@ function coordinateKey(longitude: number, latitude: number) {
   return `${longitude.toFixed(6)},${latitude.toFixed(6)}`;
 }
 
-function convertAmapBatch(amap: AMapNamespace, coordinates: Array<[number, number]>) {
-  return new Promise<Array<[number, number]>>((resolve, reject) => {
-    amap.convertFrom(coordinates, "gps", (status, result) => {
-      if (status !== "complete" || !result.locations || result.locations.length !== coordinates.length) {
-        reject(new Error("厕所坐标转换失败"));
-        return;
-      }
-      resolve(result.locations.map((location) => [location.getLng(), location.getLat()]));
-    });
-  });
+function transformLatitude(longitude: number, latitude: number) {
+  let value = -100 + 2 * longitude + 3 * latitude + 0.2 * latitude * latitude + 0.1 * longitude * latitude + 0.2 * Math.sqrt(Math.abs(longitude));
+  value += ((20 * Math.sin(6 * longitude * Math.PI) + 20 * Math.sin(2 * longitude * Math.PI)) * 2) / 3;
+  value += ((20 * Math.sin(latitude * Math.PI) + 40 * Math.sin((latitude / 3) * Math.PI)) * 2) / 3;
+  value += ((160 * Math.sin((latitude / 12) * Math.PI) + 320 * Math.sin((latitude * Math.PI) / 30)) * 2) / 3;
+  return value;
+}
+
+function transformLongitude(longitude: number, latitude: number) {
+  let value = 300 + longitude + 2 * latitude + 0.1 * longitude * longitude + 0.1 * longitude * latitude + 0.1 * Math.sqrt(Math.abs(longitude));
+  value += ((20 * Math.sin(6 * longitude * Math.PI) + 20 * Math.sin(2 * longitude * Math.PI)) * 2) / 3;
+  value += ((20 * Math.sin(longitude * Math.PI) + 40 * Math.sin((longitude / 3) * Math.PI)) * 2) / 3;
+  value += ((150 * Math.sin((longitude / 12) * Math.PI) + 300 * Math.sin((longitude / 30) * Math.PI)) * 2) / 3;
+  return value;
+}
+
+function wgs84ToGcj02(longitude: number, latitude: number): [number, number] {
+  if (longitude < 72.004 || longitude > 137.8347 || latitude < 0.8293 || latitude > 55.8271) return [longitude, latitude];
+  const latitudeOffset = transformLatitude(longitude - 105, latitude - 35);
+  const longitudeOffset = transformLongitude(longitude - 105, latitude - 35);
+  const radianLatitude = (latitude / 180) * Math.PI;
+  let magic = Math.sin(radianLatitude);
+  magic = 1 - 0.006693421622966 * magic * magic;
+  const sqrtMagic = Math.sqrt(magic);
+  const convertedLatitude = latitude + (latitudeOffset * 180) / (((6378245 * (1 - 0.006693421622966)) / (magic * sqrtMagic)) * Math.PI);
+  const convertedLongitude = longitude + (longitudeOffset * 180) / ((6378245 / sqrtMagic) * Math.cos(radianLatitude) * Math.PI);
+  return [convertedLongitude, convertedLatitude];
 }
 
 function makeLayers(
@@ -799,31 +810,20 @@ function AmapToiletMap({
   const mapRef = useRef<AMapInstance | null>(null);
   const amapRef = useRef<AMapNamespace | null>(null);
   const markersRef = useRef<AMapMarker[]>([]);
-  const [convertedCoordinates, setConvertedCoordinates] = useState<Map<string, [number, number]>>(new Map());
   const [mapEpoch, setMapEpoch] = useState(0);
 
-  useEffect(() => {
-    let active = true;
-    loadAmap(amapKey)
-      .then(async (amap) => {
-        const missing = records.filter((record) => !amapCoordinateCache.has(coordinateKey(record.coordinates.longitude, record.coordinates.latitude)));
-        for (let index = 0; index < missing.length; index += 40) {
-          const batch = missing.slice(index, index + 40);
-          const sourceCoordinates = batch.map((record): [number, number] => [record.coordinates.longitude, record.coordinates.latitude]);
-          const converted = await convertAmapBatch(amap, sourceCoordinates);
-          batch.forEach((record, itemIndex) => {
-            amapCoordinateCache.set(coordinateKey(record.coordinates.longitude, record.coordinates.latitude), converted[itemIndex]);
-          });
-        }
-        if (!active) return;
-        setConvertedCoordinates(new Map(records.flatMap((record) => {
-          const converted = amapCoordinateCache.get(coordinateKey(record.coordinates.longitude, record.coordinates.latitude));
-          return converted ? [[record.id, converted] as const] : [];
-        })));
-      })
-      .catch((error: unknown) => active && onFailure(error instanceof Error ? `坐标转换：${error.message}` : "坐标转换失败"));
-    return () => { active = false; };
-  }, [amapKey, records, onFailure]);
+  const convertedCoordinates = useMemo(() => {
+    for (const record of records) {
+      const key = coordinateKey(record.coordinates.longitude, record.coordinates.latitude);
+      if (!amapCoordinateCache.has(key)) {
+        amapCoordinateCache.set(key, wgs84ToGcj02(record.coordinates.longitude, record.coordinates.latitude));
+      }
+    }
+    return new Map(records.flatMap((record) => {
+      const converted = amapCoordinateCache.get(coordinateKey(record.coordinates.longitude, record.coordinates.latitude));
+      return converted ? [[record.id, converted] as const] : [];
+    }));
+  }, [records]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -834,7 +834,7 @@ function AmapToiletMap({
         if (!active || !containerRef.current) return;
         map = new amap.Map(containerRef.current, {
           viewMode: "3D",
-          center: SHANGHAI_CENTER,
+          center: wgs84ToGcj02(...SHANGHAI_CENTER),
           zoom: 10.1,
           pitch: window.matchMedia("(max-width: 760px)").matches ? 38 : 52,
           rotation: -18,
@@ -845,7 +845,6 @@ function AmapToiletMap({
           resizeEnable: true,
           zooms: [7.6, 19],
         });
-        map.add(new amap.Buildings({ zooms: [14, 19], zIndex: 12, heightFactor: 1 }));
         map.addControl(new amap.Scale());
         map.addControl(new amap.ToolBar({ position: "RB", liteStyle: true }));
         const refresh = () => setMapEpoch((current) => current + 1);
