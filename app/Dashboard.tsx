@@ -113,6 +113,7 @@ declare global {
   interface Window {
     AMap?: AMapNamespace;
     _AMapSecurityConfig?: { serviceHost: string };
+    __fangbianAmapReady?: () => void;
   }
 }
 
@@ -503,13 +504,22 @@ function loadAmap(key: string) {
   window._AMapSecurityConfig = { serviceHost: `${window.location.origin}/_AMapService` };
   amapLoaderPromise = new Promise<AMapNamespace>((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(key)}&plugin=AMap.Scale,AMap.ToolBar`;
+    const finish = (result: AMapNamespace | Error) => {
+      window.clearTimeout(timeout);
+      delete window.__fangbianAmapReady;
+      if (result instanceof Error) reject(result);
+      else resolve(result);
+    };
+    window.__fangbianAmapReady = () => window.AMap
+      ? finish(window.AMap)
+      : finish(new Error("高德地图回调未完成初始化"));
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(key)}&plugin=AMap.Scale,AMap.ToolBar&callback=__fangbianAmapReady`;
     script.async = true;
-    script.onload = () => window.AMap ? resolve(window.AMap) : reject(new Error("高德地图脚本未初始化"));
     script.onerror = () => {
       script.remove();
-      reject(new Error("高德地图脚本加载失败"));
+      finish(new Error("高德地图脚本加载失败"));
     };
+    const timeout = window.setTimeout(() => finish(new Error("高德地图初始化超时")), 12000);
     document.head.appendChild(script);
   });
   amapLoaderPromise.catch(() => { amapLoaderPromise = null; });
