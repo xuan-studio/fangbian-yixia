@@ -76,7 +76,9 @@ test("golden map, emergency and community flows remain usable", async () => {
 
   assert.equal(await page.locator(".data-stat-row").filter({ hasText: "公开厕所" }).locator("strong").innerText(), "941");
   assert.equal(await page.locator(".data-stat-row").filter({ hasText: "优质榜单" }).locator("strong").innerText(), "12");
-  assert.equal(await page.locator(".facility-signal").count(), 12, "单厕详情应展示完整设施信号灯");
+  const visibleSignalCount = await page.locator(".facility-signal").count();
+  assert.ok(visibleSignalCount > 0 && visibleSignalCount < 12, "单厕详情只应展示已有的紧凑特征标签");
+  assert.equal(await page.locator(".facility-signal.state-unknown, .facility-signal.state-unavailable").count(), 0, "未知或不具备的标签不应占位");
   assert.ok(await page.locator(".facility-signal.state-confirmed").count() >= 3, "公开字段应点亮已确认信号");
   assert.equal(await page.locator(".facility-signal.state-mock").count(), 3, "首个演示点应清楚标出三项 Mock 标签");
   assert.match(await page.locator(".facility-signal.state-mock").first().getAttribute("data-tooltip"), /Mock 演示标签/);

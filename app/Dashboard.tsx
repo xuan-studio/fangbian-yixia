@@ -38,6 +38,7 @@ import {
   Navigation,
   PackageCheck,
   PawPrint,
+  Plus,
   Radar,
   Route,
   Search,
@@ -176,6 +177,7 @@ function buildFacilitySignals(record: ToiletRecord | null, dataset: FacilityTagD
       state = "mock";
       evidence = "Mock 演示标签，不参与排序，等待用户验证";
     }
+    if (state === "unknown" || state === "unavailable") return [];
     return [{ ...definition, state, tooltip: `${definition.label}｜${definition.description}｜${evidence}` }];
   });
 }
@@ -372,12 +374,6 @@ function haversineKm(a: [number, number], b: [number, number]) {
 function distanceLabel(kilometers: number) {
   if (kilometers < 1) return `${Math.max(40, Math.round(kilometers * 1000))} m`;
   return `${kilometers.toFixed(1)} km`;
-}
-
-function truthLabel(value: boolean | null) {
-  if (value === true) return "有";
-  if (value === false) return "无";
-  return "待核实";
 }
 
 function scoreLabel(record: ToiletRecord) {
@@ -702,24 +698,6 @@ function ToiletMap({
   }, [pinRecords, clusters, clusterIndex, boundary, selectedId, mode, theme, mapZoom, onSelect]);
 
   return <div className="map-canvas" ref={containerRef} aria-label="上海公共厕所 3D 地图" />;
-}
-
-function FacilityCell({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: boolean | null;
-}) {
-  return (
-    <div className={`facility-cell ${value === true ? "is-yes" : value === false ? "is-no" : "is-unknown"}`}>
-      <span className="facility-icon">{icon}</span>
-      <span>{label}</span>
-      <strong>{truthLabel(value)}</strong>
-    </div>
-  );
 }
 
 function HealthModal({
@@ -1560,13 +1538,12 @@ export function Dashboard() {
                 <p><MapPin size={14} /> {selected.address ?? `${selected.district ?? "区域"} · 具体地址待核实`}</p>
                 <div className="detail-badges"><span className={selected.open24h === true ? "is-open" : ""}><Clock3 size={13} /> {selected.open24h === true ? "24 小时" : selected.openingHours ?? "时间待核实"}</span><span><ShieldCheck size={13} /> 可信度 {selected.confidence === null ? "待核实" : `${Math.round(selected.confidence * 100)}%`}</span>{selected.nameStatus === "generated" || selected.nameStatus === "source_generic" ? <span><CircleAlert size={13} /> 名称待补充</span> : null}</div>
                 <div className="facility-signal-panel">
-                  <div className="facility-signal-heading"><span>设施信号灯</span><small>悬停查看状态与证据</small></div>
-                  <div className="facility-signal-bar" aria-label="厕所设施与体验标签">
+                  <div className="facility-signal-heading"><span>可用特征</span><small>{selectedFacilitySignals.length ? `${selectedFacilitySignals.length} 项 · 悬停看证据` : "等待共建补充"}</small></div>
+                  {selectedFacilitySignals.length ? <div className="facility-signal-bar" aria-label="该厕所已有的设施与体验标签">
                     {selectedFacilitySignals.map((signal) => <button type="button" key={signal.id} className={`facility-signal state-${signal.state}`} aria-label={signal.tooltip} data-tooltip={signal.tooltip}>
-                      {facilitySignalIcon(signal.id)}<i />
+                      {facilitySignalIcon(signal.id)}<span>{signal.label}</span><i />
                     </button>)}
-                  </div>
-                  <div className="facility-signal-legend"><span><i className="confirmed" />已确认</span><span><i className="source" />来源线索</span><span><i className="mock" />Mock 待验证</span><span><i className="unknown" />未知</span></div>
+                  </div> : <button type="button" className="facility-signal-empty" onClick={() => openCommunityHub("contribute")}><Plus size={12} /> 暂无已知特征，帮它补充</button>}
                 </div>
                 {publishedIndoorLocation ? <div className={`published-indoor-location status-${publishedIndoorLocation.status}`}><Layers3 size={15} /><div><span>{publishedIndoorLocation.status === "published_demo" ? "演示上线位置" : "社区已上线位置"}</span><strong>{publishedIndoorLocation.floor} · {publishedIndoorLocation.zone}</strong></div></div> : null}
               </div>
@@ -1583,14 +1560,8 @@ export function Dashboard() {
               </section>
 
               <section className="detail-section">
-                <div className="section-heading"><span><Gauge size={15} /> 设施情报</span><small>未知 ≠ 没有</small></div>
-                <div className="facility-grid">
-                  <FacilityCell icon={<span>蹲</span>} label="蹲厕" value={selected.facility.squat} />
-                  <FacilityCell icon={<span>坐</span>} label="坐厕" value={selected.facility.seated} />
-                  <FacilityCell icon={<Accessibility size={16} />} label="无障碍" value={selected.facility.accessible} />
-                  <FacilityCell icon={<Baby size={16} />} label="第三卫生间" value={selected.facility.thirdRestroom} />
-                </div>
-                <div className="tag-row">{selected.tags.length ? selected.tags.map((tag) => <span key={tag}>#{tag}</span>) : <span>#Tag 待补充</span>}</div>
+                <div className="section-heading"><span><Gauge size={15} /> 更多标签</span><small>来自数据源与社区描述</small></div>
+                <div className="tag-row">{selected.tags.length ? selected.tags.map((tag) => <span key={tag}>#{tag}</span>) : <button type="button" onClick={() => openCommunityHub("contribute")}><Plus size={11} /> 补充标签</button>}</div>
               </section>
 
               <section className="detail-section crowd-section">

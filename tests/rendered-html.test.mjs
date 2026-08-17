@@ -84,9 +84,10 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.match(dashboard, /憋不住了/);
   assert.match(dashboard, /aria-controls="task-parameter-controls"/);
   assert.match(dashboard, /展开任务参数/);
-  assert.match(dashboard, /设施信号灯/);
+  assert.match(dashboard, /可用特征/);
   assert.match(dashboard, /Mock 演示标签，不参与排序/);
-  assert.match(dashboard, /未知 ≠ 没有/);
+  assert.match(dashboard, /state === "unknown" \|\| state === "unavailable"/);
+  assert.match(dashboard, /暂无已知特征，帮它补充/);
   assert.match(dashboard, /3 人确认后上线/);
   assert.match(dashboard, /模拟下一位用户确认/);
   assert.match(dashboard, /厕所共建中心/);
