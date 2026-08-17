@@ -77,6 +77,7 @@ test("golden map, emergency and community flows remain usable", async () => {
   assert.equal(await page.locator(".data-stat-row").filter({ hasText: "公开厕所" }).locator("strong").innerText(), "941");
   assert.equal(await page.locator(".data-stat-row").filter({ hasText: "优质榜单" }).locator("strong").innerText(), "12");
 
+  await page.getByRole("button", { name: "展开任务参数", exact: true }).click();
   await page.getByRole("combobox", { name: "区域" }).selectOption({ label: "黄浦区" });
   await page.waitForFunction(() => document.querySelector(".map-count strong")?.textContent?.trim() === "129");
   await page.getByRole("combobox", { name: "开放状态" }).selectOption("24h");
@@ -145,6 +146,12 @@ test("mobile layout exposes every primary action without horizontal discovery", 
   const mainSiteLink = page.getByRole("link", { name: "返回 w3xuan.xyz 主站" });
   assert.equal(await mainSiteLink.isVisible(), true, "手机首屏应提供返回主站入口");
   assert.equal(await mainSiteLink.getAttribute("href"), "https://w3xuan.xyz");
+
+  assert.equal(await page.getByPlaceholder("搜索厕所、地址或 Tag").isVisible(), false, "任务参数应默认收起");
+  await page.getByRole("button", { name: "展开任务参数", exact: true }).click();
+  assert.equal(await page.getByPlaceholder("搜索厕所、地址或 Tag").isVisible(), true, "展开后应显示完整筛选条件");
+  await page.getByRole("button", { name: /收起/ }).click();
+  await page.evaluate(() => window.scrollTo(0, 0));
 
   for (const label of ["我要共建", /验证中心 1/, "3 分钟演示"]) {
     assert.equal(await page.getByRole("button", { name: label, exact: typeof label === "string" }).isVisible(), true, `${String(label)} 应在手机顶部直接可见`);

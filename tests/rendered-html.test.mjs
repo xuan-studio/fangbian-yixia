@@ -80,6 +80,8 @@ test("offline, import and open-source contracts are packaged", async () => {
   assert.match(schema, /"title": "ToiletRecord"/);
   assert.match(template, /"records": \[\]/);
   assert.match(dashboard, /憋不住了/);
+  assert.match(dashboard, /aria-controls="task-parameter-controls"/);
+  assert.match(dashboard, /展开任务参数/);
   assert.match(dashboard, /未知 ≠ 没有/);
   assert.match(dashboard, /3 人确认后上线/);
   assert.match(dashboard, /模拟下一位用户确认/);

@@ -952,6 +952,7 @@ export function Dashboard() {
   const [publicMeta, setPublicMeta] = useState<Pick<PublicDataset, "source" | "license" | "generatedAt"> | null>(null);
   const [boundary, setBoundary] = useState<BoundaryData | null>(null);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("online");
   const [visualTheme, setVisualTheme] = useState<VisualTheme>("dark");
@@ -1066,6 +1067,17 @@ export function Dashboard() {
       return true;
     });
   }, [allRecords, filters]);
+
+  const activeFilterCount = [
+    filters.query.trim().length > 0,
+    filters.district !== "全部区域",
+    filters.opening !== "all",
+    filters.source !== "all",
+    filters.squat,
+    filters.seated,
+    filters.accessible,
+    filters.thirdRestroom,
+  ].filter(Boolean).length;
 
   const visibleSelectedId = emergencyOpen || filteredRecords.some((record) => record.id === selectedId)
     ? selectedId
@@ -1367,20 +1379,35 @@ export function Dashboard() {
       <main className="dashboard-grid">
         <aside className="left-rail">
           <section className="control-section">
-            <div className="section-heading"><span><SlidersHorizontal size={15} /> 任务参数</span><button className="text-action" onClick={() => setFilters(EMPTY_FILTERS)}>重置</button></div>
-            <label className="search-field"><Search size={16} /><input value={filters.query} onChange={(event) => updateFilter("query", event.target.value)} placeholder="搜索厕所、地址或 Tag" /></label>
-            <div className="two-fields">
-              <label><span>区域</span><select value={filters.district} onChange={(event) => updateFilter("district", event.target.value)}><option>全部区域</option>{districts.map((district) => <option key={district}>{district}</option>)}</select></label>
-              <label><span>开放状态</span><select value={filters.opening} onChange={(event) => updateFilter("opening", event.target.value as FilterState["opening"])}><option value="all">不限</option><option value="24h">确认 24 小时</option><option value="known">时间已记录</option></select></label>
+            <div className="section-heading filter-section-heading">
+              <span><SlidersHorizontal size={15} /> 任务参数</span>
+              <div className="filter-heading-actions">
+                {activeFilterCount > 0 && <button className="text-action" onClick={() => setFilters(EMPTY_FILTERS)}>重置</button>}
+                <button className="filter-toggle" aria-expanded={filterPanelOpen} aria-controls="task-parameter-controls" onClick={() => setFilterPanelOpen((current) => !current)}>
+                  {filterPanelOpen ? "收起" : "展开"}<ChevronRight size={14} />
+                </button>
+              </div>
             </div>
-            <div className="source-tabs" role="group" aria-label="数据来源">
-              {([['all', '全部'], ['public', '公开'], ['premium', '优质']] as const).map(([value, label]) => <button className={filters.source === value ? "is-active" : ""} key={value} onClick={() => updateFilter("source", value)}>{label}</button>)}
-            </div>
-            <div className="toggle-grid">
-              <button className={filters.squat ? "is-active" : ""} onClick={() => updateFilter("squat", !filters.squat)}><span className="toggle-icon">蹲</span><span>有蹲厕</span>{filters.squat && <Check size={13} />}</button>
-              <button className={filters.seated ? "is-active" : ""} onClick={() => updateFilter("seated", !filters.seated)}><span className="toggle-icon">坐</span><span>有坐厕</span>{filters.seated && <Check size={13} />}</button>
-              <button className={filters.accessible ? "is-active" : ""} onClick={() => updateFilter("accessible", !filters.accessible)}><Accessibility size={16} /><span>无障碍</span>{filters.accessible && <Check size={13} />}</button>
-              <button className={filters.thirdRestroom ? "is-active" : ""} onClick={() => updateFilter("thirdRestroom", !filters.thirdRestroom)}><Baby size={16} /><span>第三卫生间</span>{filters.thirdRestroom && <Check size={13} />}</button>
+            {!filterPanelOpen && <button className="filter-collapsed-summary" aria-label="展开任务参数" onClick={() => setFilterPanelOpen(true)}>
+              <span><strong>{filteredRecords.length}</strong><small>当前命中</small></span>
+              <span><b>{activeFilterCount > 0 ? `${activeFilterCount} 项筛选已启用` : "尚未设置筛选"}</b><small>点击展开搜索与设施条件</small></span>
+              <ChevronRight size={16} />
+            </button>}
+            <div id="task-parameter-controls" className="filter-controls" hidden={!filterPanelOpen}>
+              <label className="search-field"><Search size={16} /><input value={filters.query} onChange={(event) => updateFilter("query", event.target.value)} placeholder="搜索厕所、地址或 Tag" /></label>
+              <div className="two-fields">
+                <label><span>区域</span><select value={filters.district} onChange={(event) => updateFilter("district", event.target.value)}><option>全部区域</option>{districts.map((district) => <option key={district}>{district}</option>)}</select></label>
+                <label><span>开放状态</span><select value={filters.opening} onChange={(event) => updateFilter("opening", event.target.value as FilterState["opening"])}><option value="all">不限</option><option value="24h">确认 24 小时</option><option value="known">时间已记录</option></select></label>
+              </div>
+              <div className="source-tabs" role="group" aria-label="数据来源">
+                {([['all', '全部'], ['public', '公开'], ['premium', '优质']] as const).map(([value, label]) => <button className={filters.source === value ? "is-active" : ""} key={value} onClick={() => updateFilter("source", value)}>{label}</button>)}
+              </div>
+              <div className="toggle-grid">
+                <button className={filters.squat ? "is-active" : ""} onClick={() => updateFilter("squat", !filters.squat)}><span className="toggle-icon">蹲</span><span>有蹲厕</span>{filters.squat && <Check size={13} />}</button>
+                <button className={filters.seated ? "is-active" : ""} onClick={() => updateFilter("seated", !filters.seated)}><span className="toggle-icon">坐</span><span>有坐厕</span>{filters.seated && <Check size={13} />}</button>
+                <button className={filters.accessible ? "is-active" : ""} onClick={() => updateFilter("accessible", !filters.accessible)}><Accessibility size={16} /><span>无障碍</span>{filters.accessible && <Check size={13} />}</button>
+                <button className={filters.thirdRestroom ? "is-active" : ""} onClick={() => updateFilter("thirdRestroom", !filters.thirdRestroom)}><Baby size={16} /><span>第三卫生间</span>{filters.thirdRestroom && <Check size={13} />}</button>
+              </div>
             </div>
           </section>
 

@@ -302,6 +302,57 @@ a {
   color: var(--lime);
 }
 
+.filter-section-heading { margin-bottom: 10px; }
+
+.filter-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-toggle {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  background: var(--panel-3);
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  color: var(--cyan);
+  font-size: 10px;
+}
+
+.filter-toggle svg { transition: transform 160ms ease; }
+.filter-toggle[aria-expanded="true"] svg { transform: rotate(90deg); }
+
+.filter-collapsed-summary {
+  width: 100%;
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  background: #071019;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--cyan);
+  color: var(--muted);
+  text-align: left;
+}
+
+.filter-collapsed-summary span,
+.filter-collapsed-summary strong,
+.filter-collapsed-summary b,
+.filter-collapsed-summary small { display: block; }
+.filter-collapsed-summary strong { color: var(--lime); font: 22px/1 var(--font-mono); }
+.filter-collapsed-summary b { color: var(--ink); font-size: 11px; }
+.filter-collapsed-summary small { margin-top: 4px; color: var(--faint); font-size: 8px; font-weight: 500; }
+.filter-collapsed-summary > svg { color: var(--cyan); }
+.filter-collapsed-summary:hover { border-color: var(--line-strong); background: var(--panel-2); }
+
+.filter-controls[hidden] { display: none; }
+
 .search-field {
   height: 41px;
   display: flex;
@@ -2025,6 +2076,17 @@ a {
 .theme-light .map-stage {
   background: linear-gradient(145deg, #f4efe3 0%, #ebe5d8 100%);
 }
+
+.theme-light .filter-toggle,
+.theme-light .filter-collapsed-summary {
+  background: #fffdf8;
+  border-color: #c9c1b4;
+  color: #536762;
+}
+.theme-light .filter-collapsed-summary { border-left-color: #087f96; }
+.theme-light .filter-collapsed-summary strong { color: #f05f3f; }
+.theme-light .filter-collapsed-summary b { color: #172321; }
+.theme-light .filter-collapsed-summary small { color: #71817d; }
 
 .theme-light .map-kicker { color: #087f96; }
 .theme-light .map-count strong { color: #f05f3f; }
